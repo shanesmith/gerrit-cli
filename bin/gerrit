@@ -1,0 +1,13 @@
+#!/usr/bin/env node
+
+var cli = require("../lib/cli");
+
+var program = require("commander");
+
+program.command('config').action(cli.config);
+
+program.command('projects').action(cli.projects);
+
+program.command('clone').action(cli.clone);
+
+program.parse(process.argv);
