@@ -4,9 +4,12 @@ var cli = require("../lib/cli");
 
 var program = require("commander");
 
-program.command('config').action(cli.config);
+program.command('config [name]')
+  .description("Show the server configurations for <gerrit_name>, or all configurations, or if none specified the configuration of the current project. If a configuration does not exist for the specified name you will have the option to create one.")
+  .option("--all")
+  .action(cli.config);
 
-program.command('projects').action(cli.projects);
+program.command('projects <name>').action(cli.projects);
 
 program.command('clone').action(cli.clone);
 
