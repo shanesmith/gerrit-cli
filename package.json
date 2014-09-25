@@ -4,6 +4,7 @@
   "dependencies": {
     "commander": "^2.3.0",
     "execSync": "^1.0.2",
-    "inquirer": "^0.5.1"
+    "inquirer": "^0.5.1",
+    "bluebird": "^2.3.2"
   }
 }

@@ -9,7 +9,8 @@ program.command('config [name]')
   .option("--all")
   .action(cli.config);
 
-program.command('projects <name>').action(cli.projects);
+program.command('projects <name>')
+  .action(cli.projects);
 
 program.command('clone').action(cli.clone);
 
