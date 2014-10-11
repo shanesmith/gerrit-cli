@@ -1,8 +1,15 @@
 #!/usr/bin/env node
 
-var cli = require("../lib/cli");
-
 var program = require("commander");
+var domain = require("domain").create();
+var Promise = require("bluebird");
+
+var cli = require("../lib/cli");
+var git = require("../lib/git");
+var logger = require("../lib/logger");
+
+
+/** Define Interface **/
 
 program.command('config [name]')
   .description("Show the server configurations for <gerrit_name>, or all configurations, or if none specified the configuration of the current project. If a configuration does not exist for the specified name you will have the option to create one.")
@@ -15,4 +22,37 @@ program.command('projects <name>')
 program.command('clone <gerrit_name> [project_name] [destination_folder]')
   .action(cli.clone);
 
-program.parse(process.argv);
+
+/** Logging and Error Handling **/
+
+logger.on('error', function(message) {
+  console.log("ERROR: " + message);
+});
+
+logger.on('info', console.log);
+
+Promise.onPossiblyUnhandledRejection(function(e, promise) {
+  throw e;
+});
+
+// handles exceptions, better than try/catch
+// since it'll also handle those thrown from
+// assynchronous calls
+domain.on('error', function(err) {
+  if (err instanceof git.GitError) {
+    console.error("GIT ERROR");
+  }
+  else {
+    console.log("UNKNOWN ERROR");
+  }
+  console.error(err);
+});
+
+
+/** Run it! **/
+
+domain.run(function() {
+  program.parse(process.argv);
+});
+
+
