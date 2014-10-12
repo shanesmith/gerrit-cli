@@ -22,6 +22,10 @@ program.command('projects <name>')
 program.command('clone <gerrit_name> [project_name] [destination_folder]')
   .action(cli.clone);
 
+program.command('status')
+  .alias('st')
+  .action(cli.status);
+
 
 /** Logging and Error Handling **/
 
