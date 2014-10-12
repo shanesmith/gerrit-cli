@@ -26,6 +26,9 @@ program.command('status')
   .alias('st')
   .action(cli.status);
 
+program.command('ssh <command>')
+  .action(cli.ssh);
+
 
 /** Logging and Error Handling **/
 
