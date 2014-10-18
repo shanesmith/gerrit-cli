@@ -26,6 +26,11 @@ program.command('status')
   .alias('st')
   .action(cli.status);
 
+program.command('assign')
+  .action(function() {
+    cli.assign(program.args.slice(0, -1));
+  });
+
 program.command('ssh <command>')
   .action(cli.ssh);
 
