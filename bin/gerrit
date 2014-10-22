@@ -55,6 +55,10 @@ function push_action(base_branch, is_draft) {
   cli.push(base_branch, reviewers, is_draft);
 }
 
+program.command('checkout <change_id|topic> [patch_set]')
+  .alias("co")
+  .action(cli.checkout);
+
 program.command('ssh <command>')
   .action(cli.ssh);
 
@@ -66,6 +70,8 @@ logger.on('error', function(message) {
 });
 
 logger.on('info', console.log);
+
+logger.on('warn', console.warn);
 
 Promise.onPossiblyUnhandledRejection(function(e, promise) {
   throw e;
