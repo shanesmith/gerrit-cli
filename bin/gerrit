@@ -62,6 +62,21 @@ program.command('checkout <change_id|topic> [patch_set]')
 program.command('ssh <command>')
   .action(cli.ssh);
 
+program.command('review [verified_score] [code_review_score] [message]')
+  .option("-1").option("-2") // capture these here so commander doesn't fail
+  .action(function() {
+    var args = program.rawArgs.slice(program.rawArgs.indexOf("review") + 1);
+    cli.review.apply(null, args);
+  });
+
+program.command('submit [message]')
+  .action(cli.submit);
+
+program.command('abandon [message]')
+  .action(cli.abandon);
+
+program.command('comment <message>')
+  .action(cli.comment);
 
 /** Logging and Error Handling **/
 
