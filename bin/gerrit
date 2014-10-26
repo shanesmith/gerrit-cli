@@ -78,6 +78,10 @@ program.command('abandon [message]')
 program.command('comment <message>')
   .action(cli.comment);
 
+program.command('pubmit [base_branch]')
+  .alias('ninja')
+  .action(cli.pubmit);
+
 /** Logging and Error Handling **/
 
 logger.on('error', function(message) {
