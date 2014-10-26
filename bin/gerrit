@@ -59,6 +59,10 @@ program.command('checkout <change_id|topic> [patch_set]')
   .alias("co")
   .action(cli.checkout);
 
+program.command('recheckout')
+  .alias("reco")
+  .action(cli.recheckout);
+
 program.command('ssh <command>')
   .action(cli.ssh);
 
