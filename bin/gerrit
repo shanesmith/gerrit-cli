@@ -1,9 +1,9 @@
 #!/usr/bin/env node
+"use strict";
 
-var util = require("util");
 var program = require("commander");
 var domain = require("domain").create();
-var Promise = require("bluebird");
+var Q = require("bluebird");
 var chalk = require("chalk");
 
 var cli = require("../lib/cli");
@@ -14,44 +14,44 @@ var logger = require("../lib/logger");
 
 /** Define Interface **/
 
-program.command('help')
+program.command("help")
   .action(program.help.bind(program));
 
-program.command('config [name]')
+program.command("config [name]")
   .description("Show the server configurations for <gerrit_name>, or all configurations, or if none specified the configuration of the current project. If a configuration does not exist for the specified name you will have the option to create one.")
   .option("--all")
   .action(cli.config);
 
-program.command('projects <name>')
+program.command("projects <name>")
   .action(cli.projects);
 
-program.command('clone <gerrit_name> <project_name> [destination_folder]')
+program.command("clone <gerrit_name> <project_name> [destination_folder]")
   .action(cli.clone);
 
-program.command('status')
-  .alias('st')
+program.command("status")
+  .alias("st")
   .action(cli.status);
 
-program.command('assign')
+program.command("assign")
   .action(function() {
     cli.assign(program.args.slice(0, -1));
   });
 
-program.command('push [base_branch]')
+program.command("push [base_branch]")
   .option("--assign [reviewer...]")
   .action(function(base_branch) {
-    push_action('push', base_branch);
+    push_action("push", base_branch);
   });
 
-program.command('draft [base_branch]')
+program.command("draft [base_branch]")
   .option("--assign [reviewer...]")
   .action(function(base_branch) {
-    push_action('draft', base_branch);
+    push_action("draft", base_branch);
   });
 
 function push_action(command_name, base_branch) {
   var reviewers = [];
-  var is_draft = (command_name === 'draft');
+  var is_draft = (command_name === "draft");
   var indexOfAssignFlag = program.rawArgs.indexOf("--assign");
   if (indexOfAssignFlag !== -1) {
     reviewers = program.rawArgs.slice(indexOfAssignFlag + 1);
@@ -63,53 +63,53 @@ function push_action(command_name, base_branch) {
   cli.push(base_branch, reviewers, is_draft);
 }
 
-program.command('checkout <change_id|topic> [patch_set]')
+program.command("checkout <change_id|topic> [patch_set]")
   .alias("co")
   .action(cli.checkout);
 
-program.command('recheckout')
+program.command("recheckout")
   .alias("reco")
   .action(cli.recheckout);
 
-program.command('ssh <command>')
+program.command("ssh <command>")
   .action(cli.ssh);
 
-program.command('review [verified_score] [code_review_score] [message]')
+program.command("review [verified_score] [code_review_score] [message]")
   .option("-1").option("-2") // capture these here so commander doesn't fail
   .action(function() {
     var args = program.rawArgs.slice(program.rawArgs.indexOf("review") + 1);
     cli.review.apply(null, args);
   });
 
-program.command('submit [message]')
+program.command("submit [message]")
   .action(cli.submit);
 
-program.command('abandon [message]')
+program.command("abandon [message]")
   .action(cli.abandon);
 
-program.command('comment <message>')
+program.command("comment <message>")
   .action(cli.comment);
 
-program.command('pubmit [base_branch]')
-  .alias('ninja')
+program.command("pubmit [base_branch]")
+  .alias("ninja")
   .action(cli.pubmit);
 
-program.command('browse')
-  .alias('browser')
-  .alias('bro')
+program.command("browse")
+  .alias("browser")
+  .alias("bro")
   .action(cli.browse);
 
 
-/** Logging and Error Handling **/
+/* Logging and Error Handling **/
 
-logger.on('info', console.log);
+logger.on("info", console.log);
 
-logger.on('warn', logProcess(function(line) {
-  console.warn('gerrit ' + chalk.yellow("WARN") + ' ' + line);
+logger.on("warn", logProcess(function(line) {
+  console.warn("gerrit " + chalk.yellow("WARN") + " " + line);
 }));
 
-logger.on('error', logProcess(function(line) {
-  console.error('gerrit ' + chalk.red("ERROR") + ' ' + line);
+logger.on("error", logProcess(function(line) {
+  console.error("gerrit " + chalk.red("ERROR") + " " + line);
 }));
 
 function logProcess(lineOutputCallback) {
@@ -118,24 +118,24 @@ function logProcess(lineOutputCallback) {
     if (context) {
       for (var key in context) {
         var value = context[key];
-        if (typeof value === 'object') {
+        if (typeof value === "object") {
           value = JSON.stringify(value);
         }
-        message.push("  " + chalk.magenta(key + ':') + " " + value);
+        message.push("  " + chalk.magenta(key + ":") + " " + value);
       }
     }
     message.forEach(lineOutputCallback);
   };
 }
 
-Promise.onPossiblyUnhandledRejection(function(e, promise) {
+Q.onPossiblyUnhandledRejection(function(e, promise) {
   throw e;
 });
 
 // handles exceptions, better than try/catch
 // since it'll also handle those thrown from
 // assynchronous calls
-domain.on('error', function(err) {
+domain.on("error", function(err) {
   if (err instanceof git.GitError) {
     logger.error("There was an error running a git command", {
       command: err.command,

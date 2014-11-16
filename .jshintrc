@@ -1,0 +1,20 @@
+{
+  "node": true,
+  "browser": false,
+  "esnext": true,
+  "bitwise": true,
+  "curly": true,
+  "eqeqeq": true,
+  "eqnull": true,
+  "immed": true,
+  "indent": 2,
+  "latedef": "nofunc",
+  "newcap": true,
+  "noarg": true,
+  "quotmark": "double",
+  "regexp": true,
+  "undef": true,
+  "unused": "vars",
+  "strict": true,
+  "trailing": true
+}
