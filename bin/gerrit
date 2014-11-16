@@ -94,6 +94,11 @@ program.command('pubmit [base_branch]')
   .alias('ninja')
   .action(cli.pubmit);
 
+program.command('browse')
+  .alias('browser')
+  .alias('bro')
+  .action(cli.browse);
+
 
 /** Logging and Error Handling **/
 
