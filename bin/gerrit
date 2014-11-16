@@ -40,20 +40,25 @@ program.command('assign')
 program.command('push [base_branch]')
   .option("--assign [reviewer...]")
   .action(function(base_branch) {
-    push_action(base_branch, false);
+    push_action('push', base_branch);
   });
 
 program.command('draft [base_branch]')
   .option("--assign [reviewer...]")
   .action(function(base_branch) {
-    push_action(base_branch, true);
+    push_action('draft', base_branch);
   });
 
-function push_action(base_branch, is_draft) {
+function push_action(command_name, base_branch) {
   var reviewers = [];
+  var is_draft = (command_name === 'draft');
   var indexOfAssignFlag = program.rawArgs.indexOf("--assign");
   if (indexOfAssignFlag !== -1) {
     reviewers = program.rawArgs.slice(indexOfAssignFlag + 1);
+    base_branch = program.rawArgs[indexOfAssignFlag - 1];
+    if (base_branch === command_name) {
+      base_branch = undefined;
+    }
   }
   cli.push(base_branch, reviewers, is_draft);
 }
