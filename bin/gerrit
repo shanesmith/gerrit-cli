@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 
+var util = require("util");
 var program = require("commander");
 var domain = require("domain").create();
 var Promise = require("bluebird");
+var chalk = require("chalk");
 
 var cli = require("../lib/cli");
 var git = require("../lib/git");
@@ -86,15 +88,34 @@ program.command('pubmit [base_branch]')
   .alias('ninja')
   .action(cli.pubmit);
 
-/** Logging and Error Handling **/
 
-logger.on('error', function(message) {
-  console.log("ERROR: " + message);
-});
+/** Logging and Error Handling **/
 
 logger.on('info', console.log);
 
-logger.on('warn', console.warn);
+logger.on('warn', logProcess(function(line) {
+  console.warn('gerrit ' + chalk.yellow("WARN") + ' ' + line);
+}));
+
+logger.on('error', logProcess(function(line) {
+  console.error('gerrit ' + chalk.red("ERROR") + ' ' + line);
+}));
+
+function logProcess(lineOutputCallback) {
+  return function(message, context) {
+    message = message.split("\n");
+    if (context) {
+      for (var key in context) {
+        var value = context[key];
+        if (typeof value === 'object') {
+          value = JSON.stringify(value);
+        }
+        message.push("  " + chalk.magenta(key + ':') + " " + value);
+      }
+    }
+    message.forEach(lineOutputCallback);
+  };
+}
 
 Promise.onPossiblyUnhandledRejection(function(e, promise) {
   throw e;
@@ -105,12 +126,16 @@ Promise.onPossiblyUnhandledRejection(function(e, promise) {
 // assynchronous calls
 domain.on('error', function(err) {
   if (err instanceof git.GitError) {
-    console.error("GIT ERROR");
+    logger.error("There was an error running a git command", {
+      command: err.command,
+      output: err.message,
+      code: err.code
+    });
+  }
   }
   else {
-    console.log("UNKNOWN ERROR");
+    logger.error(chalk.bgRed("UNKNOWN") + " " + err.toString(), err);
   }
-  console.error(err);
 });
 
 

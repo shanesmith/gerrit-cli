@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "dependencies": {
     "bluebird": "^2.3.2",
+    "chalk": "^0.5.1",
     "commander": "^2.4.0",
     "execSync": "^1.0.2",
     "inquirer": "^0.5.1",
