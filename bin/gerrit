@@ -8,6 +8,7 @@ var chalk = require("chalk");
 
 var cli = require("../lib/cli");
 var git = require("../lib/git");
+var gerrit = require("../lib/gerrit");
 var logger = require("../lib/logger");
 
 
@@ -132,6 +133,12 @@ domain.on('error', function(err) {
       code: err.code
     });
   }
+  else if (err instanceof gerrit.GerritError) {
+    logger.error(err.message);
+    logger.error(err.stack.substr(err.stack.indexOf("\n") + 1));
+  }
+  else if (err instanceof cli.CliError) {
+    logger.error(err.message);
   }
   else {
     logger.error(chalk.bgRed("UNKNOWN") + " " + err.toString(), err);
