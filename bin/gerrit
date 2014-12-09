@@ -15,7 +15,7 @@ var logger = require("../lib/logger");
 /** Define Interface **/
 
 program.command('help')
-  .action(program.help);
+  .action(program.help.bind(program));
 
 program.command('config [name]')
   .description("Show the server configurations for <gerrit_name>, or all configurations, or if none specified the configuration of the current project. If a configuration does not exist for the specified name you will have the option to create one.")
