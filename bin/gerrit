@@ -102,7 +102,9 @@ program.command("browse")
 
 /* Logging and Error Handling **/
 
-logger.on("info", console.log);
+logger.on("info", logProcess(function(line) {
+  console.log(line);
+}));
 
 logger.on("warn", logProcess(function(line) {
   console.warn("gerrit " + chalk.yellow("WARN") + " " + line);
