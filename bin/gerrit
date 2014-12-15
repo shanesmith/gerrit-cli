@@ -18,13 +18,13 @@ program.command("help")
   .action(program.help.bind(program));
 
 program.command("config [config_name]")
-
-.description("Create a server configuration for the given config name if it does not already exist, otherwise displays the configuration values. Include the `--edit` flag to edit an existing config. If no config name is provided then 'default' will be used.")
+  .description("Create a server configuration for the given config name if it does not already exist, otherwise displays the configuration values. Include the `--edit` flag to edit an existing config. If no config name is provided then 'default' will be used.")
   .option("--all")
   .option("-e, --edit")
   .action(cli.config);
 
-program.command("projects <name>")
+program.command("projects [config_name]")
+  .description("Display a list of projnamenameects for the given gerrit-cli config. If no config name is provided then 'default' will be used.")
   .action(cli.projects);
 
 program.command("clone <gerrit_name> <project_name> [destination_folder]")
