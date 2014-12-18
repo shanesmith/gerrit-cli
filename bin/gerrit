@@ -27,7 +27,8 @@ program.command("projects [config_name]")
   .description("Display a list of projnamenameects for the given gerrit-cli config. If no config name is provided then 'default' will be used.")
   .action(cli.projects);
 
-program.command("clone <gerrit_name> <project_name> [destination_folder]")
+program.command("clone [config_name] [project_name] [destination_folder]")
+  .description("Clones a project from the Gerrit server and installs the commit-msg hook. To let gerrit-cli prompt you with the available configs and projects don't provide any arguments.")
   .action(cli.clone);
 
 program.command("status")
