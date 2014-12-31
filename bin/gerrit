@@ -33,26 +33,32 @@ program.command("clone [config_name] [project_name] [destination_folder]")
 
 program.command("status")
   .alias("st")
+  .option("-r, --remote <remote>")
   .action(cli.status);
 
 program.command("assign")
+  .option("-r, --remote <remote>")
   .action(function() {
-    cli.assign(program.args.slice(0, -1));
+    var reviewers = program.args.slice(0, -1);
+    var options = arguments[arguments.length-1];
+    cli.assign(reviewers, options);
   });
 
 program.command("push [base_branch]")
+  .option("-r, --remote <remote>")
   .option("--assign [reviewer...]")
-  .action(function(base_branch) {
-    push_action("push", base_branch);
+  .action(function(base_branch, options) {
+    push_action("push", base_branch, options);
   });
 
 program.command("draft [base_branch]")
+  .option("-r, --remote <remote>")
   .option("--assign [reviewer...]")
-  .action(function(base_branch) {
-    push_action("draft", base_branch);
+  .action(function(base_branch, options) {
+    push_action("draft", base_branch, options);
   });
 
-function push_action(command_name, base_branch) {
+function push_action(command_name, base_branch, options) {
   var reviewers = [];
   var is_draft = (command_name === "draft");
   var indexOfAssignFlag = program.rawArgs.indexOf("--assign");
@@ -63,43 +69,64 @@ function push_action(command_name, base_branch) {
       base_branch = undefined;
     }
   }
-  cli.push(base_branch, reviewers, is_draft);
+  cli.push(base_branch, reviewers, is_draft, options);
 }
 
 program.command("checkout <change_id|topic> [patch_set]")
   .alias("co")
+  .option("-r, --remote <remote>")
   .action(cli.checkout);
 
 program.command("recheckout")
   .alias("reco")
+  .option("-r, --remote <remote>")
   .action(cli.recheckout);
 
 program.command("ssh <command>")
+  .option("-r, --remote <remote>")
   .action(cli.ssh);
 
 program.command("review [verified_score] [code_review_score] [message]")
+  .option("-r, --remote <remote>")
   .option("-1").option("-2") // capture these here so commander doesn't fail
   .action(function() {
+    var options = arguments[arguments.length-1];
     var args = program.rawArgs.slice(program.rawArgs.indexOf("review") + 1);
+    args.push(options);
+    
+    var remoteFlagIndex = args.indexOf("--remote");
+    if (remoteFlagIndex === -1) {
+      remoteFlagIndex = args.indexOf("-r");
+    }
+
+    if (remoteFlagIndex >= 0) {
+      args.splice(remoteFlagIndex, 2);
+    }
+
     cli.review.apply(null, args);
   });
 
 program.command("submit [message]")
+  .option("-r, --remote <remote>")
   .action(cli.submit);
 
 program.command("abandon [message]")
+  .option("-r, --remote <remote>")
   .action(cli.abandon);
 
 program.command("comment <message>")
+  .option("-r, --remote <remote>")
   .action(cli.comment);
 
 program.command("pubmit [base_branch]")
   .alias("ninja")
+  .option("-r, --remote <remote>")
   .action(cli.pubmit);
 
 program.command("browse")
   .alias("browser")
   .alias("bro")
+  .option("-r, --remote <remote>")
   .action(cli.browse);
 
 
