@@ -129,6 +129,9 @@ program.command("browse")
   .option("-r, --remote <remote>")
   .action(cli.browse);
 
+program.command("completion")
+  .action(cli.completion);
+
 
 /* Logging and Error Handling **/
 
