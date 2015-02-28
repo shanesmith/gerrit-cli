@@ -37,6 +37,8 @@ program.command("status")
   .action(cli.status);
 
 program.command("assign")
+  .option("-a, --all")
+  .option("-i, --interactive")
   .option("-r, --remote <remote>")
   .action(function() {
     var reviewers = program.args.slice(0, -1);
