@@ -5,6 +5,7 @@ var program = require("commander");
 var domain = require("domain").create();
 var Q = require("bluebird");
 var chalk = require("chalk");
+var _ = require("lodash");
 
 var cli = require("../lib/cli");
 var git = require("../lib/git");
@@ -89,39 +90,60 @@ program.command("ssh <command>")
   .action(cli.ssh);
 
 program.command("review [verified_score] [code_review_score] [message]")
-  .option("-r, --remote <remote>")
+  .option("-i, --interactive")
+  .option("-r, --remote [remote]")
   .option("-1").option("-2") // capture these here so commander doesn't fail
   .action(function() {
     var options = arguments[arguments.length-1];
     var args = program.rawArgs.slice(program.rawArgs.indexOf("review") + 1);
-    args.push(options);
-    
-    var remoteFlagIndex = args.indexOf("--remote");
-    if (remoteFlagIndex === -1) {
-      remoteFlagIndex = args.indexOf("-r");
+
+    options.options.forEach(function(opt) {
+      if (_.contains(["-2", "-1"], opt.long)) {
+        return;
+      }
+      var flagIndex = args.indexOf(opt.short);
+      if (flagIndex === -1) {
+        flagIndex = args.indexOf(opt.long);
+      }
+
+      if (flagIndex !== -1) {
+        var numSplice = 1;
+        var value = options[opt.long.substr(2)];
+        if (opt.required || (opt.optional && !_.isBoolean(value))) {
+          numSplice = 2;
+        }
+        args.splice(flagIndex, numSplice);
+      }
+    });
+
+    while (args.length < 3) {
+      args.push(null);
     }
 
-    if (remoteFlagIndex >= 0) {
-      args.splice(remoteFlagIndex, 2);
-    }
+    args.push(options);
 
     cli.review.apply(null, args);
   });
 
 program.command("submit [message]")
+  .option("-a, --all")
   .option("-r, --remote <remote>")
   .action(cli.submit);
 
 program.command("abandon [message]")
+  .option("-a, --all")
   .option("-r, --remote <remote>")
   .action(cli.abandon);
 
-program.command("comment <message>")
+program.command("comment [message]")
+  .option("-a, --all")
+  .option("-i, --interactive")
   .option("-r, --remote <remote>")
   .action(cli.comment);
 
 program.command("pubmit [base_branch]")
   .alias("ninja")
+  .option("-a, --all")
   .option("-r, --remote <remote>")
   .action(cli.pubmit);
 
