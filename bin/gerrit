@@ -48,6 +48,7 @@ program.command("status")
   .option("--assigned").option("--not-assigned")
   .option("--mine").option("--not-mine")
   .option("-r, --remote <remote>")
+  .option("--table")
   .action(cli.status);
 
 program.command("assign")
