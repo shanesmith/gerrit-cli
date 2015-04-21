@@ -49,6 +49,8 @@ program.command("status")
   .option("--mine").option("--not-mine")
   .option("-r, --remote <remote>")
   .option("--table")
+  .option("--oneline")
+  .option("--format <format>")
   .action(cli.status);
 
 program.command("assign")
