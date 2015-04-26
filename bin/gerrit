@@ -34,7 +34,7 @@ program.command("config [config_name]")
     "Manage server configurations",
     "Create a server configuration for the given config name if it does not already exist, otherwise displays the configuration values. Include the `--edit` flag to edit an existing config. If no config name is provided then 'default' will be used."
   ])
-  .option("--all")
+  .option("-a, --all")
   .option("-e, --edit")
   .action(cli.config);
 
