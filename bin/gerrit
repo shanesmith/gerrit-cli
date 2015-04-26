@@ -5,6 +5,7 @@ var program = require("commander");
 var domain = require("domain").create();
 var Q = require("bluebird");
 var chalk = require("chalk");
+var wrap = require("word-wrap");
 var _ = require("lodash");
 
 var cli = require("../lib/cli");
@@ -12,14 +13,27 @@ var git = require("../lib/git");
 var gerrit = require("../lib/gerrit");
 var logger = require("../lib/logger");
 
-
 /** Define Interface **/
 
-program.command("help")
-  .action(program.help.bind(program));
+program.command("help [command]")
+  .action(function(name) {
+    if (!name) {
+      program.help();
+      return;
+    }
+    var command = _.find(program.commands, function(cmd) {
+      return cmd._name === name || cmd._alias === name;
+    });
+    if (command) {
+      command.help();
+    }
+  });
 
 program.command("config [config_name]")
-  .description("Create a server configuration for the given config name if it does not already exist, otherwise displays the configuration values. Include the `--edit` flag to edit an existing config. If no config name is provided then 'default' will be used.")
+  .description([
+    "Manage server configurations",
+    "Create a server configuration for the given config name if it does not already exist, otherwise displays the configuration values. Include the `--edit` flag to edit an existing config. If no config name is provided then 'default' will be used."
+  ])
   .option("--all")
   .option("-e, --edit")
   .action(cli.config);
@@ -34,6 +48,7 @@ program.command("clone [config_name] [project_name] [destination_folder]")
 
 program.command("status")
   .alias("st")
+  .description("Status of things")
   .option("--author <name>").option("--not-author <name>")
   .option("--owner <name>").option("--not-owner <name>")
   .option("--reviewer <name>").option("--not-reviewer <name>")
@@ -172,6 +187,113 @@ program.command("browse")
 program.command("completion")
   .action(cli.completion);
 
+/* Help */
+
+program.Command.prototype.usage = function() {
+  var usage = "";
+
+  if (this.commands.length) {
+    usage += "[command] ";
+  }
+
+  this._args.forEach(function(arg) {
+    var nameOutput = arg.name + (arg.variadic === true ? "..." : "");
+
+    nameOutput = arg.required ? "<" + nameOutput + ">" : "[" + nameOutput + "]";
+
+    usage += nameOutput + " ";
+  });
+
+  return usage;
+};
+
+program.Command.prototype.commandHelp = function() {
+  if (!this.commands.length) {
+    return "";
+  }
+
+  var help = "Commands:\n\n";
+
+  var maxWidth = this.commands.reduce(function(max, cmd) {
+    return Math.max(max, cmd._name.length);
+  }, 0);
+
+  this.commands.forEach(function(cmd) {
+    var spaces = new Array(maxWidth - cmd._name.length + 5).join(" ");
+    var description = "";
+    if (cmd._description) {
+      description = cmd._description;
+      if (Array.isArray(description)) {
+        description = description[0];
+      }
+    }
+    help += "  " + cmd._name + spaces + description + "\n";
+  });
+
+  return help;
+
+};
+
+program.Command.prototype.optionHelp = function() {
+  if (!this.options.length) {
+    return "";
+  }
+
+  var help = "Options:\n\n";
+
+  var maxWidth = this.options.reduce(function(max, opt) {
+    return Math.max(max, opt.flags.length);
+  }, 0);
+
+  this.options.forEach(function(opt) {
+    var spaces = new Array(maxWidth - opt.flags.length + 5).join(" ");
+    help += "  " + opt.flags + spaces + opt.description + "\n";
+  });
+
+  return help;
+};
+
+program.Command.prototype.helpInformation = function() {
+  var help = [];
+
+  var usage = "  " + this._name + " " + this.usage();
+
+  help.push(
+    "",
+    "Usage:",
+    "",
+    usage
+  );
+
+  if (this._alias) {
+    help.push("", "Alias: " + this._alias);
+  }
+
+  if (this._description) {
+    var description = this._description;
+    if (Array.isArray(description)) {
+      description = description[1];
+    }
+    help.push(
+      "",
+      "Description:",
+      "",
+      wrap(description, {width:80})
+    );
+  }
+
+  if (this.commands.length) {
+    help.push("", this.commandHelp());
+  }
+
+  if (this.options.length) {
+    help.push("", this.optionHelp());
+  }
+
+  help.push("");
+
+  return help.join("\n");
+};
 
 /* Logging and Error Handling **/
 
@@ -236,6 +358,9 @@ domain.on("error", function(err) {
 
 domain.run(function() {
   program.parse(process.argv);
+  if (!program.args.length) {
+    program.help();
+  }
 });
 
 
