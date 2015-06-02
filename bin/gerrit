@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+
 "use strict";
 
 var program = require("commander");
@@ -16,6 +17,10 @@ var logger = require("../lib/logger");
 /** Define Interface **/
 
 program.command("help [command]")
+  .description([
+    "View help for specified command.",
+    "View help for specified command."
+  ])
   .action(function(name) {
     if (!name) {
       program.help();
@@ -32,46 +37,72 @@ program.command("help [command]")
 program.command("config [config_name]")
   .description([
     "Manage server configurations",
-    "Create a server configuration for the given config name if it does not already exist, otherwise displays the configuration values. Include the `--edit` flag to edit an existing config. If no config name is provided then 'default' will be used."
+    "Create a server configuration for the given config name if it does not already exist, otherwise displays the configuration values. If no config name is provided then 'default' will be used."
   ])
-  .option("-a, --all")
-  .option("-e, --edit")
+  .option("-a, --all", "Display all configurations.")
+  .option("-e, --edit", "Edit the specified config.")
   .action(cli.config);
 
 program.command("projects [config_name]")
-  .description("Display a list of projnamenameects for the given gerrit-cli config. If no config name is provided then 'default' will be used.")
+  .description([
+    "Display available projects on server.",
+    "Display a list of project names for the given config name. If no config name is provided then 'default' will be used."
+  ])
   .action(cli.projects);
 
 program.command("clone [config_name] [project_name] [destination_folder]")
-  .description("Clones a project from the Gerrit server and installs the commit-msg hook. To let gerrit-cli prompt you with the available configs and projects don't provide any arguments.")
+  .description([
+    "Clone a project from server.",
+    "Clones a project from the Gerrit server and installs the commit-msg hook. All parameters are optional and will be prompted if not specified."
+  ])
   .action(cli.clone);
 
-program.command("status")
+var statusCmd = program.command("status")
   .alias("st")
-  .description("Status of things")
-  .option("--author <name>").option("--not-author <name>")
-  .option("--owner <name>").option("--not-owner <name>")
-  .option("--reviewer <name>").option("--not-reviewer <name>")
-  .option("--branch <name>").option("--not-branch <name>")
-  .option("--topic <name>").option("--not-topic <name>")
-  .option("--message <messagew>").option("--not-message <message>")
-  .option("--age <age>").option("--not-age <age>")
-  .option("--drafts").option("--not-drafts")
-  .option("--starred").option("--not-starred")
-  .option("--watched").option("--not-watched")
-  .option("--reviewed").option("--not-reviewed")
-  .option("--assigned").option("--not-assigned")
-  .option("--mine").option("--not-mine")
-  .option("-r, --remote <remote>")
-  .option("--table")
-  .option("--oneline")
-  .option("--format <format>")
+  .description([
+    "List details of patches on the server for the current project.",
+    "List details of patches on the server for the current project. Many options are available to filter and format the output. Filter options are accumulative. Each filter can be negated by prepending 'not', for example: --not-owner jsmith"
+  ])
+  .option("--owner <name>", "Filter by patch owner.").option("--not-owner <name>")
+  .option("--author <name>", "Alias for --owner.").option("--not-author <name>")
+  .option("--reviewer <name>", "Filter by assigned reviewer.").option("--not-reviewer <name>")
+  .option("--branch <name>", "Filter against target branch.").option("--not-branch <name>")
+  .option("--topic <name>", "Filter by topic name").option("--not-topic <name>")
+  .option("--message <message>", "Filter by commit message substring match.").option("--not-message <message>")
+  .option("--age <age>", "Filter by amount of time since last update or comment.").option("--not-age <age>")
+  .option("--drafts", "Filter by draft status.").option("--not-drafts")
+  .option("--starred", "Filter by starred status.").option("--not-starred")
+  .option("--watched", "Filter by watched status.").option("--not-watched")
+  .option("--reviewed", "Filter on whether at least one non-zero review has been made.").option("--not-reviewed")
+  .option("--assigned", "Filter on whether current user is assigned to review.").option("--not-assigned")
+  .option("--mine", "Filter on whether current user is owner.").option("--not-mine")
+  .option("-r, --remote <remote>", "Specify a remote.")
+  .option("--table", "Display in a table.")
+  .option("--oneline", "Display all patch data in a single line.")
+  .option("--format <format>", "Specifies what fields in which order to display.")
   .action(cli.status);
 
+statusCmd.optionHelp = function() {
+  var output = program.Command.prototype.optionHelp.call(this);
+
+  output = output.split("\n");
+
+  _.remove(output, function(line, index) {
+    return line.match(/\s*--not-/);
+
+  });
+
+  return output.join("\n");
+};
+
 program.command("assign")
-  .option("-a, --all")
-  .option("-i, --interactive")
-  .option("-r, --remote <remote>")
+  .description([
+    "Assign reviewers to the current patch.",
+    "Assign reviewers to the current patch. If there are multiple commits in the topic you will need to either assign the reviewers to all of them (--all) or to choose which to assign to (--interactive)."
+  ])
+  .option("-a, --all", "Assign reviewers to all patches in the current topic.")
+  .option("-i, --interactive", "Start interactive reviewer assigning to specify which patches in current topic.")
+  .option("-r, --remote <remote>", "Specify a remote.")
   .action(function() {
     var reviewers = program.args.slice(0, -1);
     var options = arguments[arguments.length-1];
@@ -79,15 +110,23 @@ program.command("assign")
   });
 
 program.command("push [base_branch]")
-  .option("-r, --remote <remote>")
-  .option("--assign [reviewer...]")
+  .description([
+    "Push patches of current topic to server for review.",
+    ""
+  ])
+  .option("-r, --remote <remote>", "Specify a remote.")
+  .option("--assign [reviewer...]", "Also assign specified reviewers to the patch.")
   .action(function(base_branch, options) {
     push_action("push", base_branch, options);
   });
 
 program.command("draft [base_branch]")
-  .option("-r, --remote <remote>")
-  .option("--assign [reviewer...]")
+  .description([
+    "Push patches of current topic to server as drafts.",
+    "Push patches of current topic to server as drafts. Also sets up a gard where a subsequent `gerrit push` on the same topic will confirm with the user whether the drafts status of the patches should be removed.",
+  ])
+  .option("-r, --remote <remote>", "Specify a remote.")
+  .option("--assign [reviewer...]", "Also assign specified reviewers to the patch.")
   .action(function(base_branch, options) {
     push_action("draft", base_branch, options);
   });
@@ -108,21 +147,38 @@ function push_action(command_name, base_branch, options) {
 
 program.command("checkout <change_id|topic> [patch_set]")
   .alias("co")
-  .option("-r, --remote <remote>")
+  .description([
+    "Fetch and checkout topic branch from server.",
+    "Fetch and checkout topic branch from server."
+  ])
+  .option("-r, --remote <remote>", "Specify a remote.")
   .action(cli.checkout);
 
 program.command("recheckout")
   .alias("reco")
-  .option("-r, --remote <remote>")
+  .description([
+    "Re-checkout current topic.",
+    "Re-checkout current topic."
+  ])
+  .option("-r, --remote <remote>", "Specify a remote.")
   .action(cli.recheckout);
 
 program.command("ssh <command>")
-  .option("-r, --remote <remote>")
+  .description([
+    "Run arbitrary gerrit command on server.",
+    "Run arbitrary gerrit command on server. See available commands at https://gerrit.googlecode.com/svn/documentation/2.2.1/cmd-index.html",
+
+  ])
+  .option("-r, --remote <remote>", "Specify a remote.")
   .action(cli.ssh);
 
 program.command("review [verified_score] [code_review_score] [message]")
-  .option("-i, --interactive")
-  .option("-r, --remote [remote]")
+  .description([
+    "Post a review for the current topic.",
+    "Post a review for the current topic."
+  ])
+  .option("-i, --interactive", "Interactively select which patchs to review if topic contains multiple patches.")
+  .option("-r, --remote <remote>", "Specify a remote.")
   .option("-1").option("-2") // capture these here so commander doesn't fail
   .action(function() {
     var options = arguments[arguments.length-1];
@@ -157,34 +213,58 @@ program.command("review [verified_score] [code_review_score] [message]")
   });
 
 program.command("submit [message]")
+  .description([
+    "Submit the current topic for merging.",
+    "Submit the current topic for merging."
+  ])
   .option("-a, --all")
-  .option("-r, --remote <remote>")
+  .option("-r, --remote <remote>", "Specify a remote.")
   .action(cli.submit);
 
 program.command("abandon [message]")
+  .description([
+    "Abandon the current topic.",
+    "Abandon the current topic."
+  ])
   .option("-a, --all")
-  .option("-r, --remote <remote>")
+  .option("-r, --remote <remote>", "Specify a remote.")
   .action(cli.abandon);
 
 program.command("comment [message]")
+  .description([
+    "Post a comment on the current topic.",
+    "Post a comment on the current topic."
+  ])
   .option("-a, --all")
   .option("-i, --interactive")
-  .option("-r, --remote <remote>")
+  .option("-r, --remote <remote>", "Specify a remote.")
   .action(cli.comment);
 
 program.command("pubmit [base_branch]")
   .alias("ninja")
+  .description([
+    "Push patch to server then immediately submit for merging.",
+    "Push patch to server then immediately submit for merging."
+  ])
   .option("-a, --all")
-  .option("-r, --remote <remote>")
+  .option("-r, --remote <remote>", "Specify a remote.")
   .action(cli.pubmit);
 
 program.command("browse")
   .alias("browser")
   .alias("bro")
-  .option("-r, --remote <remote>")
+  .description([
+    "Open browser to gerrit web page for current patch.",
+    "Open browser to gerrit web page for current patch."
+  ])
+  .option("-r, --remote <remote>", "Specify a remote.")
   .action(cli.browse);
 
 program.command("completion")
+  .description([
+    "Enables tab completion for gerrit-cli.",
+    "Enables tab completion for gerrit-cli."
+  ])
   .action(cli.completion);
 
 /* Help */
