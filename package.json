@@ -1,6 +1,20 @@
 {
   "name": "gerrit-cli",
   "version": "0.0.1",
+  "description": "Gerrit in your command lines.",
+  "keywords": ["gerrit", "git"],
+  "license": "MIT",
+  "author": "Shane Smith <shane.smith.baz@gmail.com> (http://shane.smudel.ca)",
+  "main": "lib/cli",
+  "repository": "shanesmith/gerrit-cli",
+  "preferGlobal": true,
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "bin": {
+    "gerrit": "bin/gerrit",
+    "ger": "bin/gerrit"
+  },
   "dependencies": {
     "bluebird": "^2.3.2",
     "chalk": "^0.5.1",
@@ -16,5 +30,10 @@
   },
   "scripts": {
     "test": "jshint bin/gerrit lib/*"
-  }
+  },
+  "files": [
+    "bin",
+    "lib",
+    "completion"
+  ]
 }
