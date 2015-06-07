@@ -6,7 +6,7 @@ gerrit-cli provides a command-line interface to the Gerrit code review system.
 
 It was born out of the frustration of having to write out
 `git push orign HEAD:refs/for/branch/topic` every time and simplifies it to
-just `gerrit push`.
+just `gerrit up`.
 
 
 ## Install
@@ -77,7 +77,7 @@ $ git checkout -b bugfix master
 
 $ git commit -am "Squash crazy bug"
 
-$ gerrit push --assign lathrope
+$ gerrit up --assign lathrope
 
 $ gerrit comment "First attempt at fixing bug, comments welcomed."
 ```

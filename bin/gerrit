@@ -109,7 +109,7 @@ program.command("assign")
     cli.assign(reviewers, options);
   });
 
-program.command("push [base_branch]")
+program.command("up [base_branch]")
   .description([
     "Push patches of current topic to server for review.",
     ""
@@ -123,7 +123,7 @@ program.command("push [base_branch]")
 program.command("draft [base_branch]")
   .description([
     "Push patches of current topic to server as drafts.",
-    "Push patches of current topic to server as drafts. Also sets up a gard where a subsequent `gerrit push` on the same topic will confirm with the user whether the drafts status of the patches should be removed.",
+    "Push patches of current topic to server as drafts. Also sets up a gard where a subsequent `gerrit up` on the same topic will confirm with the user whether the drafts status of the patches should be removed.",
   ])
   .option("-r, --remote <remote>", "Specify a remote.")
   .option("--assign [reviewer...]", "Also assign specified reviewers to the patch.")
@@ -142,7 +142,7 @@ function push_action(command_name, base_branch, options) {
       base_branch = undefined;
     }
   }
-  cli.push(base_branch, reviewers, is_draft, options);
+  cli.up(base_branch, reviewers, is_draft, options);
 }
 
 program.command("checkout <change_id|topic> [patch_set]")

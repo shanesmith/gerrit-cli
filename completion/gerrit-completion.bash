@@ -29,7 +29,7 @@ _gerrit_completion() {
 
     COMPREPLY=()
 
-    opts="config projects clone status st push draft assign checkout co rechecout reco review submit abandon pubmit ninja ssh hook-install"
+    opts="config projects clone status st up draft assign checkout co rechecout reco review submit abandon pubmit ninja ssh hook-install"
 
     second="${COMP_WORDS[1]}"
     cur="${COMP_WORDS[COMP_CWORD]}"
@@ -45,7 +45,7 @@ _gerrit_completion() {
         assign)
           _gerrit_assign "${COMP_WORDS[@]:2}"
           ;;
-        push)
+        up)
           if [[ ${COMP_WORDS[2]} = "--assign" ]]; then
             _gerrit_assign "${COMP_WORDS[@]:3}"
           elif [[ ${COMP_WORDS[3]} = "--assign" ]]; then
