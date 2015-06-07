@@ -267,6 +267,13 @@ program.command("completion")
   ])
   .action(cli.completion);
 
+program.command("topic <name>")
+  .description([
+    "Create new topic branch.",
+    "Create new topic branch with upstream set to current branch's upstream."
+  ])
+  .action(cli.topic);
+
 /* Help */
 
 program.Command.prototype.usage = function() {
