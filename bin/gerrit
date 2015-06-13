@@ -423,7 +423,8 @@ domain.on("error", function(err) {
   if (err instanceof git.GitError) {
     logger.error("There was an error running a git command", {
       command: err.command,
-      output: err.message,
+      output: err.output,
+      error: err.error,
       code: err.code
     });
   }
