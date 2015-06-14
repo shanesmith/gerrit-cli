@@ -267,10 +267,10 @@ program.command("completion")
   ])
   .action(cli.completion);
 
-program.command("topic <name>")
+program.command("topic <name> [upstream]")
   .description([
     "Create new topic branch.",
-    "Create new topic branch with upstream set to current branch's upstream."
+    "Create new topic branch tracking the given upstream. If upstream is not specified then it will be set to current branch's upstream."
   ])
   .action(cli.topic);
 
