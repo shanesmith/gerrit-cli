@@ -7,6 +7,7 @@ var domain = require("domain").create();
 var Q = require("bluebird");
 var chalk = require("chalk");
 var wrap = require("word-wrap");
+var util = require("util");
 var _ = require("lodash");
 
 var cli = require("../lib/cli");
@@ -15,6 +16,12 @@ var gerrit = require("../lib/gerrit");
 var logger = require("../lib/logger");
 
 /** Define Interface **/
+
+program.on("*", function(args) {
+  logger.error(util.format("Command \"%s\" does not exist.", args[0]));
+  program.help();
+  process.exit(1);
+});
 
 program.command("help [command]")
   .description([
