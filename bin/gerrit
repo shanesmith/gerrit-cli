@@ -116,40 +116,40 @@ program.command("assign")
     cli.assign(reviewers, options);
   });
 
-program.command("up [base_branch]")
+program.command("up")
   .description([
     "Push patches of current topic to server for review.",
     ""
   ])
   .option("-r, --remote <remote>", "Specify a remote.")
+  .option("-b, --branch <branch>", "Specify a branch name.")
+  .option("--draft", "Make this a draft patch.")
   .option("--assign [reviewer...]", "Also assign specified reviewers to the patch.")
-  .action(function(base_branch, options) {
-    push_action("push", base_branch, options);
+  .action(function(options) {
+    push_action(options);
   });
 
-program.command("draft [base_branch]")
+program.command("draft")
   .description([
     "Push patches of current topic to server as drafts.",
     "Push patches of current topic to server as drafts. Also sets up a gard where a subsequent `gerrit up` on the same topic will confirm with the user whether the drafts status of the patches should be removed.",
   ])
   .option("-r, --remote <remote>", "Specify a remote.")
+  .option("-b, --branch <branch>", "Specify a branch name.")
   .option("--assign [reviewer...]", "Also assign specified reviewers to the patch.")
-  .action(function(base_branch, options) {
-    push_action("draft", base_branch, options);
+  .action(function(options) {
+    options.draft = true;
+    push_action(options);
   });
 
-function push_action(command_name, base_branch, options) {
+function push_action(options) {
   var reviewers = [];
-  var is_draft = (command_name === "draft");
   var indexOfAssignFlag = program.rawArgs.indexOf("--assign");
   if (indexOfAssignFlag !== -1) {
     reviewers = program.rawArgs.slice(indexOfAssignFlag + 1);
-    base_branch = program.rawArgs[indexOfAssignFlag - 1];
-    if (base_branch === command_name) {
-      base_branch = undefined;
-    }
   }
-  cli.up(base_branch, reviewers, is_draft, options);
+  options.assign = reviewers;
+  cli.up(options);
 }
 
 program.command("checkout <change_id|topic> [patch_set]")
@@ -247,7 +247,7 @@ program.command("comment [message]")
   .option("-r, --remote <remote>", "Specify a remote.")
   .action(cli.comment);
 
-program.command("pubmit [base_branch]")
+program.command("pubmit")
   .alias("ninja")
   .description([
     "Push patch to server then immediately submit for merging.",
@@ -255,6 +255,7 @@ program.command("pubmit [base_branch]")
   ])
   .option("-a, --all")
   .option("-r, --remote <remote>", "Specify a remote.")
+  .option("-b, --branch <branch>", "Specify a branch name.")
   .action(cli.pubmit);
 
 program.command("browse")
