@@ -64,8 +64,9 @@ program.command("clone [config_name] [project_name] [destination_folder]")
   ])
   .action(cli.clone);
 
-var statusCmd = program.command("status")
-  .alias("st")
+var patchesCmd = program.command("patches")
+  .alias("patch")
+  .alias("pa")
   .description([
     "List details of patches on the server for the current project.",
     "List details of patches on the server for the current project. Many options are available to filter and format the output. Filter options are accumulative. Each filter can be negated by prepending 'not', for example: --not-owner jsmith"
@@ -87,9 +88,9 @@ var statusCmd = program.command("status")
   .option("--table", "Display in a table.")
   .option("--oneline", "Display all patch data in a single line.")
   .option("--format <format>", "Specifies what fields in which order to display.")
-  .action(cli.status);
+  .action(cli.patches);
 
-statusCmd.optionHelp = function() {
+patchesCmd.optionHelp = function() {
   var output = program.Command.prototype.optionHelp.call(this);
 
   output = output.split("\n");
