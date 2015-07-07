@@ -127,7 +127,8 @@ program.command("up")
   .option("-b, --branch <branch>", "Specify a branch name.")
   .option("--draft", "Make this a draft patch.")
   .option("--assign [reviewer...]", "Also assign specified reviewers to the patch.")
-  .action(function(options) {
+  .action(function() {
+    var options = arguments[arguments.length-1];
     push_action(options);
   });
 
@@ -139,7 +140,8 @@ program.command("draft")
   .option("-r, --remote <remote>", "Specify a remote.")
   .option("-b, --branch <branch>", "Specify a branch name.")
   .option("--assign [reviewer...]", "Also assign specified reviewers to the patch.")
-  .action(function(options) {
+  .action(function() {
+    var options = arguments[arguments.length-1];
     options.draft = true;
     push_action(options);
   });
