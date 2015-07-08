@@ -50,14 +50,16 @@ program.command("config [config_name]")
   .option("-e, --edit", "Edit the specified config.")
   .action(cli.config);
 
-program.command("projects [config_name]")
+program.command("projects")
+  .option("-c, --config <config_name>")
   .description([
     "Display available projects on server.",
     "Display a list of project names for the given config name. If no config name is provided then 'default' will be used."
   ])
   .action(cli.projects);
 
-program.command("clone [config_name] [project_name] [destination_folder]")
+program.command("clone [project_name] [destination_folder]")
+  .option("-c, --config <config_name>")
   .description([
     "Clone a project from server.",
     "Clones a project from the Gerrit server and installs the commit-msg hook. All parameters are optional and will be prompted if not specified."
