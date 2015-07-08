@@ -231,6 +231,7 @@ program.command("submit [message]")
     "Submit the current topic for merging."
   ])
   .option("-a, --all")
+  .option("-i, --interactive")
   .option("-r, --remote <remote>", "Specify a remote.")
   .action(cli.submit);
 
@@ -240,6 +241,7 @@ program.command("abandon [message]")
     "Abandon the current topic."
   ])
   .option("-a, --all")
+  .option("-i, --interactive")
   .option("-r, --remote <remote>", "Specify a remote.")
   .action(cli.abandon);
 
