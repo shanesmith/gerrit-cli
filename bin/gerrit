@@ -262,15 +262,13 @@ program.command("pubmit")
   .option("-b, --branch <branch>", "Specify a branch name.")
   .action(cli.pubmit);
 
-program.command("browse")
-  .alias("browser")
-  .alias("bro")
+program.command("web")
   .description([
     "Open browser to gerrit web page for current patch.",
     "Open browser to gerrit web page for current patch."
   ])
   .option("-r, --remote <remote>", "Specify a remote.")
-  .action(cli.browse);
+  .action(cli.web);
 
 program.command("completion")
   .description([
