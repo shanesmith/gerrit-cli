@@ -73,6 +73,7 @@ var patchesCmd = program.command("patches")
     "List details of patches on the server for the current project.",
     "List details of patches on the server for the current project. Many options are available to filter and format the output. Filter options are accumulative. Each filter can be negated by prepending 'not', for example: --not-owner jsmith"
   ])
+  .option("--number <number>", "Filter by patch number.").option("--not-number <number>")
   .option("--owner <name>", "Filter by patch owner.").option("--not-owner <name>")
   .option("--author <name>", "Alias for --owner.").option("--not-author <name>")
   .option("--reviewer <name>", "Filter by assigned reviewer.").option("--not-reviewer <name>")
