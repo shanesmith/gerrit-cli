@@ -107,6 +107,10 @@ patchesCmd.optionHelp = function() {
   return output.join("\n");
 };
 
+program.command("status [what]")
+  .alias("st")
+  .action(cli.status);
+
 program.command("assign")
   .description([
     "Assign reviewers to the current patch.",
