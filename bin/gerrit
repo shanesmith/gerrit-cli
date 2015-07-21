@@ -141,6 +141,7 @@ program.command("up")
   .option("-r, --remote <remote>", "Specify a remote.")
   .option("-b, --branch <branch>", "Specify a branch name if other than upstream.")
   .option("--draft", "Make this a draft patch. Also see `gerrit help draft`.")
+  .option("--comment <comment>", "Post a comment after successful push.")
   .option("--assign [reviewer...]", "Also assign specified reviewers to the patch. All words passed this option ar treated as reviewer names.")
   .action(function() {
     var options = arguments[arguments.length-1];
@@ -154,6 +155,7 @@ program.command("draft")
   ])
   .option("-r, --remote <remote>", "Specify a remote.")
   .option("-b, --branch <branch>", "Specify a branch name.")
+  .option("--comment <comment>", "Post a comment after successful push.")
   .option("--assign [reviewer...]", "Also assign specified reviewers to the patch. All words passed this option ar treated as reviewer names.")
   .action(function() {
     var options = arguments[arguments.length-1];
