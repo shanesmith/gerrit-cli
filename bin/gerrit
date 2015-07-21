@@ -14,8 +14,11 @@ var cli = require("../lib/cli");
 var git = require("../lib/git");
 var gerrit = require("../lib/gerrit");
 var logger = require("../lib/logger");
+var packagejson = require("../package.json");
 
 /** Define Interface **/
+
+program.version(packagejson.version);
 
 program.on("*", function(args) {
   logger.error(util.format("Command \"%s\" does not exist.", args[0]));
