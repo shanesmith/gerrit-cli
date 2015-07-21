@@ -493,7 +493,8 @@ domain.on("error", function(err) {
 
 domain.run(function() {
   program.parse(process.argv);
-  if (!program.args.length) {
+  if (program.rawArgs.length === 2) {
+    // display help if no commands or options given
     program.help();
   }
 });
