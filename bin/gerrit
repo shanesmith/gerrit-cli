@@ -51,7 +51,7 @@ program.command("config [config_name]")
   .action(cli.config);
 
 program.command("projects")
-  .option("-c, --config <config_name>")
+  .option("-c, --config <config_name>", "Specify a server config if other than 'default'.")
   .description([
     "Display available projects on server.",
     "Display a list of project names for the given config name. If no config name is provided then 'default' will be used."
@@ -59,7 +59,7 @@ program.command("projects")
   .action(cli.projects);
 
 program.command("clone [project_name] [destination_folder]")
-  .option("-c, --config <config_name>")
+  .option("-c, --config <config_name>", "Specify a server config if other than 'default'.")
   .description([
     "Clone a project from server.",
     "Clones a project from the Gerrit server and installs the commit-msg hook. All parameters are optional and will be prompted if not specified."
@@ -71,7 +71,11 @@ var patchesCmd = program.command("patches")
   .alias("pa")
   .description([
     "List details of patches on the server for the current project.",
-    "List details of patches on the server for the current project. Many options are available to filter and format the output. Filter options are accumulative. Each filter can be negated by prepending 'not', for example: --not-owner jsmith"
+    "List details of patches on the server for the current project. Many options are available to filter and format the output. Filter options are accumulative. Each filter can be negated by prepending 'not', for example: --not-owner jsmith",
+    {
+      "Format": "The format is a string of tokens used to decide what fields to display. For example, `gerrit patches --format '%n %O %s'` would display a table (ie: the default display) with columns for the patch number, owner and subject in that order.\nThe default format string is '%n %t %b %ou %du %s %R'.\nSee below for the list of possible tokens:\n" +
+         _.map(cli._patches_map, function(map, token) { return "%" + token + ": " + map[0]; }).join("\n")
+    }
   ])
   .option("--number <number>", "Filter by patch number.").option("--not-number <number>")
   .option("--owner <name>", "Filter by patch owner.").option("--not-owner <name>")
@@ -108,6 +112,10 @@ patchesCmd.optionHelp = function() {
 };
 
 program.command("status [what]")
+  .description([
+    "Show full details of a specific patch, including comments.",
+    "Show full details of a specific patch, including comments. By defaut shows the status of the current patch, provide a patch number or topic to view status of a specific patch."
+  ])
   .alias("st")
   .action(cli.status);
 
@@ -128,12 +136,12 @@ program.command("assign")
 program.command("up")
   .description([
     "Push patches of current topic to server for review.",
-    ""
+    "Push patches of current topic to server for review. Uses the current branch's name as the topic and the upstream as the branch to push against.\nFor example, if you were to normally push `origin HEAD:refs/for/someBranch/myTopic` then your topic branch should be called `myTopic` and its upstream should be `origin/someBranch`."
   ])
   .option("-r, --remote <remote>", "Specify a remote.")
-  .option("-b, --branch <branch>", "Specify a branch name.")
-  .option("--draft", "Make this a draft patch.")
-  .option("--assign [reviewer...]", "Also assign specified reviewers to the patch.")
+  .option("-b, --branch <branch>", "Specify a branch name if other than upstream.")
+  .option("--draft", "Make this a draft patch. Also see `gerrit help draft`.")
+  .option("--assign [reviewer...]", "Also assign specified reviewers to the patch. All words passed this option ar treated as reviewer names.")
   .action(function() {
     var options = arguments[arguments.length-1];
     push_action(options);
@@ -142,11 +150,11 @@ program.command("up")
 program.command("draft")
   .description([
     "Push patches of current topic to server as drafts.",
-    "Push patches of current topic to server as drafts. Also sets up a gard where a subsequent `gerrit up` on the same topic will confirm with the user whether the drafts status of the patches should be removed.",
+    "Push patches of current topic to server as drafts. Uses the current branch's name as the topic and the upstream as the branch to push against.\nFor example, if you were to normally push `origin HEAD:refs/drafts/someBranch/myTopic` then your topic branch should be called `myTopic` and its upstream should be `origin/someBranch`.\nAlso sets up a guard where a subsequent `gerrit up` on the same topic will confirm with the user whether the draft status of the patches should be removed."
   ])
   .option("-r, --remote <remote>", "Specify a remote.")
   .option("-b, --branch <branch>", "Specify a branch name.")
-  .option("--assign [reviewer...]", "Also assign specified reviewers to the patch.")
+  .option("--assign [reviewer...]", "Also assign specified reviewers to the patch. All words passed this option ar treated as reviewer names.")
   .action(function() {
     var options = arguments[arguments.length-1];
     options.draft = true;
@@ -163,11 +171,11 @@ function push_action(options) {
   cli.up(options);
 }
 
-program.command("checkout <change_id|topic> [patch_set]")
+program.command("checkout <what> [patch_set]")
   .alias("co")
   .description([
     "Fetch and checkout topic branch from server.",
-    "Fetch and checkout topic branch from server."
+    "Fetch and checkout topic branch from server. You can specify either the patch number or topic. By default the latest patch set will be checked out, specify a patch set number as the last argument if a different patch set is desired."
   ])
   .option("-r, --remote <remote>", "Specify a remote.")
   .action(cli.checkout);
@@ -176,7 +184,7 @@ program.command("recheckout")
   .alias("reco")
   .description([
     "Re-checkout current topic.",
-    "Re-checkout current topic."
+    "Re-checkout current topic. Same as `gerrit checkout <what>` where the current topic is specified."
   ])
   .option("-r, --remote <remote>", "Specify a remote.")
   .action(cli.recheckout);
@@ -184,7 +192,7 @@ program.command("recheckout")
 program.command("ssh <command>")
   .description([
     "Run arbitrary gerrit command on server.",
-    "Run arbitrary gerrit command on server. See available commands at https://gerrit.googlecode.com/svn/documentation/2.2.1/cmd-index.html",
+    "Run arbitrary gerrit command on server. Use to build your own commands or for debugging. See available gerrit server commands at https://gerrit.googlecode.com/svn/documentation/2.2.1/cmd-index.html",
 
   ])
   .option("-r, --remote <remote>", "Specify a remote.")
@@ -193,9 +201,9 @@ program.command("ssh <command>")
 program.command("review [verified_score] [code_review_score] [message]")
   .description([
     "Post a review for the current topic.",
-    "Post a review for the current topic."
+    "Post a review for the current topic. Scores are specified as a number between -1 and +1 for verified, and -2 to +2 for code review. The plus sign '+' is optional. Leave out all arguments in order to be prompted for the review."
   ])
-  .option("-i, --interactive", "Interactively select which patchs to review if topic contains multiple patches.")
+  .option("-i, --interactive", "Interactively select which patches to review if topic contains multiple patches.")
   .option("-r, --remote <remote>", "Specify a remote.")
   .option("-1").option("-2") // capture these here so commander doesn't fail
   .action(function() {
@@ -233,40 +241,40 @@ program.command("review [verified_score] [code_review_score] [message]")
 program.command("submit [message]")
   .description([
     "Submit the current topic for merging.",
-    "Submit the current topic for merging."
+    "Submit the current topic for merging, optionally including a comment message."
   ])
-  .option("-a, --all")
-  .option("-i, --interactive")
+  .option("-a, --all", "Merge all patches if topic contains multiple patches.")
+  .option("-i, --interactive", "Interactively select which patches to merge if topic contains multiple patches.")
   .option("-r, --remote <remote>", "Specify a remote.")
   .action(cli.submit);
 
 program.command("abandon [message]")
   .description([
     "Abandon the current topic.",
-    "Abandon the current topic."
+    "Abandon the current topic, optionally including a comment message."
   ])
-  .option("-a, --all")
-  .option("-i, --interactive")
+  .option("-a, --all", "Abandon all patches if topic contains multiple patches.")
+  .option("-i, --interactive", "Interactively select which patches to abandon if topic contains multiple patches.")
   .option("-r, --remote <remote>", "Specify a remote.")
   .action(cli.abandon);
 
-program.command("comment [message]")
+program.command("comment <message>")
   .description([
     "Post a comment on the current topic.",
     "Post a comment on the current topic."
   ])
-  .option("-a, --all")
-  .option("-i, --interactive")
+  .option("-a, --all", "Post comment on all patches if topic contains multiple patches.")
+  .option("-i, --interactive", "Interactively select which patches to post comment on if topic contains multiple patches.")
   .option("-r, --remote <remote>", "Specify a remote.")
   .action(cli.comment);
 
-program.command("pubmit")
-  .alias("ninja")
+program.command("ninja")
+  .alias("pubmit")
   .description([
     "Push patch to server then immediately submit for merging.",
     "Push patch to server then immediately submit for merging."
   ])
-  .option("-a, --all")
+  .option("-a, --all", "Push and merge all patches if topic contains multiple patches.")
   .option("-r, --remote <remote>", "Specify a remote.")
   .option("-b, --branch <branch>", "Specify a branch name.")
   .action(cli.pubmit);
@@ -282,7 +290,7 @@ program.command("web")
 program.command("completion")
   .description([
     "Enables tab completion for gerrit-cli.",
-    "Enables tab completion for gerrit-cli."
+    "Enables tab completion for gerrit-cli. Include the following line in your ~/.bashrc file:\nsource <(gerrit completion)"
   ])
   .action(cli.completion);
 
@@ -359,6 +367,20 @@ program.Command.prototype.optionHelp = function() {
   return help;
 };
 
+program.Command.prototype.additionalHelp = function() {
+  if (!Array.isArray(this._description) || this._description.length < 3) {
+    return "";
+  }
+
+  var help = "";
+
+  _.forEach(this._description[2], function(content, header) {
+    help += header + ":\n\n" + wrap(content, {width:80}) + "\n";
+  });
+
+  return help;
+};
+
 program.Command.prototype.helpInformation = function() {
   var help = [];
 
@@ -394,6 +416,10 @@ program.Command.prototype.helpInformation = function() {
 
   if (this.options.length) {
     help.push("", this.optionHelp());
+  }
+
+  if (Array.isArray(this._description) && this._description.length >= 3) {
+    help.push("", this.additionalHelp());
   }
 
   help.push("");
