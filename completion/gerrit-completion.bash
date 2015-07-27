@@ -59,3 +59,4 @@ _gerrit_completion() {
 }
 
 complete -F _gerrit_completion gerrit
+complete -F _gerrit_completion ger
