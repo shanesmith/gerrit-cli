@@ -24,7 +24,7 @@ Bash tab-completion is also available and can be enabled by adding the following
 line to your ~/.bashrc file.
 
 ```
-source <(gerrit completion)
+eval "$(gerrit completion)"
 ```
 
 
