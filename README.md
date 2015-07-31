@@ -28,6 +28,11 @@ eval "$(gerrit completion)"
 ```
 
 
+## Requirements
+
+Tested with Gerrit 2.7.
+
+
 ## Usage
 
 gerrit-cli is composed of multiple sub-commands, much like git.
