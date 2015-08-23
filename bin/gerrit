@@ -282,7 +282,7 @@ program.command("ninja")
   .option("-a, --all", "Push and merge all patches if topic contains multiple patches.")
   .option("-r, --remote <remote>", "Specify a remote.")
   .option("-b, --branch <branch>", "Specify a branch name.")
-  .action(cli.pubmit);
+  .action(cli.ninja);
 
 program.command("web")
   .description([

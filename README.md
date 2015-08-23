@@ -59,7 +59,7 @@ review        Post a review for the current topic.
 submit        Submit the current topic for merging.
 abandon       Abandon the current topic.
 comment       Post a comment on the current topic.
-pubmit        Push patch to server then immediately submit for merging.
+ninja         Push patch to server then immediately submit for merging.
 web           Open browser to gerrit web page for current patch.
 completion    Enables tab completion for gerrit-cli.
 topic         Create new topic branch.
