@@ -306,6 +306,56 @@ program.command("topic <name> [upstream]")
   ])
   .action(cli.topic);
 
+program.command("squad")
+  .alias("posse")
+  .alias("team")
+  .action(function(subCommand) {
+
+    if (arguments.length === 1) {
+      throw new cli.CliError("Please provide a subcommand.");
+    }
+
+    var args = Array.prototype.slice.call(arguments, 1);
+    var cliMethod = cli.squad[subCommand];
+
+    if (!_.isFunction(cliMethod)) {
+      throw new cli.CliError("Command \"squad " + subCommand + "\" does not exist.");
+    }
+
+    var requireMinArgsLength = function(n) {
+      if (args.length-1 < n) {
+        throw new cli.CliError("Not enough arguments.");
+      }
+    };
+
+    switch (subCommand) {
+      case "list":
+        if (args.length === 1) {
+          args.unshift(null);
+        }
+        else {
+          args.splice(1, args.length-2);
+        }
+        break;
+      case "set":
+      case "add":
+      case "remove":
+        requireMinArgsLength(2);
+        var reviewers = args.splice(1, args.length-2);
+        args.splice(1, 0, reviewers);
+        break;
+      case "delete":
+        requireMinArgsLength(1);
+        break;
+      case "rename":
+        requireMinArgsLength(2);
+        break;
+    }
+
+    return cliMethod.apply(null, args);
+
+  });
+
 /* Help */
 
 program.Command.prototype.usage = function() {
