@@ -125,7 +125,7 @@ program.command("status [what]")
 program.command("assign")
   .description([
     "Assign reviewers to the current patch.",
-    "Assign reviewers to the current patch. If there are multiple commits in the topic you will need to either assign the reviewers to all of them (--all) or to choose which to assign to (--interactive)."
+    "Assign reviewers to the current patch. If there are multiple commits in the topic you will need to either assign the reviewers to all of them (--all) or to choose which to assign to (--interactive).\n\nThe list of reviewers to assign can include squads, which should be prefixed with an @-symbol, for example \"@ATeam\". See `gerrit help squads` for more information on managing squads."
   ])
   .option("-a, --all", "Assign reviewers to all patches in the current topic.")
   .option("-i, --interactive", "Start interactive reviewer assigning to specify which patches in current topic.")
@@ -306,13 +306,40 @@ program.command("topic <name> [upstream]")
   ])
   .action(cli.topic);
 
-program.command("squad")
-  .alias("posse")
+var squadCmd = program.command("squad")
   .alias("team")
+  .description([
+    "Manage squads of reviewers.",
+    [
+      "Squads are groups of reviewers, useful if you often assign patches to certain reviewers, for example. Multiple subcommands are available below to manage squads.",
+      "",
+      "list [squad]",
+      wrap("List members of given squad, or all squads if none specified.", {width: 80, indent: "  "}),
+      "",
+      "set <squad> [reviewers...]",
+      wrap("Set squad to specified members, does not keep any previous members if already defined.", {width: 80, indent: "  "}),
+      "",
+      "add <squad> [reviewers...]",
+      wrap("Add specified members to squad.", {width: 80, indent: "  "}),
+      "",
+      "remove <squad> [reviewers...]",
+      wrap("Remove specified members from squad.", {width: 80, indent: "  "}),
+      "",
+      "delete <squad>",
+      wrap("Delete the entire squad.", {width: 80, indent: "  "}),
+      "",
+      "rename <squad> <new_name>",
+      wrap("Rename squad to specified name.", {width: 80, indent: "  "})
+    ].join("\n")
+  ])
   .action(function(subCommand) {
 
     if (arguments.length === 1) {
       throw new cli.CliError("Please provide a subcommand.");
+    }
+
+    if (subCommand === "create") {
+      subCommand = "set";
     }
 
     var args = Array.prototype.slice.call(arguments, 1);
@@ -355,6 +382,10 @@ program.command("squad")
     return cliMethod.apply(null, args);
 
   });
+
+squadCmd.usage = function() {
+  return "<list|set|add|remove|delete|rename>";
+};
 
 /* Help */
 
