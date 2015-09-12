@@ -6,7 +6,7 @@ var program = require("commander");
 var domain = require("domain").create();
 var Q = require("bluebird");
 var chalk = require("chalk");
-var wrap = require("word-wrap");
+var word_wrap = require("word-wrap");
 var util = require("util");
 var _ = require("lodash");
 
@@ -15,6 +15,14 @@ var git = require("../lib/git");
 var gerrit = require("../lib/gerrit");
 var logger = require("../lib/logger");
 var packagejson = require("../package.json");
+
+function wrap(text, options) {
+  var lines = text.split("\n");
+  lines = lines.map(function(item) {
+    return word_wrap(item, options);
+  });
+  return lines.join("\n");
+}
 
 /** Define Interface **/
 
