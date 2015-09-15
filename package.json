@@ -1,6 +1,6 @@
 {
   "name": "gerrit-cli",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Gerrit in your command lines.",
   "keywords": ["gerrit", "git"],
   "license": "MIT",

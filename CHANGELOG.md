@@ -1,3 +1,11 @@
+# 0.0.3
+
+- New 'squads' commands to group reviewers
+- Include tab completion for 'ger' alias
+- Fixed 'recheckout' command to check out current patch instead of current topic
+- Fixed '--assign' option when multiple patches detected
+
+
 # 0.0.2
 
 - Renamed 'push' command to 'up' to avoid accidental mix up with git command.
