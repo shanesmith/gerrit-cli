@@ -107,6 +107,11 @@ up`. That's it.
 You could also assign reviewers to the patch by using the
 'assign' option like so: `gerrit up --assign cbush jmartin`.
 
+Lastly, you may also group reviewers into "squads" if you find you're assigning
+the same people often. Run `gerrit squad create the_usual_suspects cbush jmartin`
+to create one, and prefix the squad name with an @-symbol to use it in your
+assign list like so: `gerrit assign @the_usual_suspects`.
+
 
 ### Viewing patches on Gerrit
 
