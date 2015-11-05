@@ -1,3 +1,10 @@
+# 0.1.0
+
+- Remove requiring squad to exists when adding
+- Allow gerrit topic from dirty index
+- Fixed 'gerrit squad delete'
+
+
 # 0.0.3
 
 - New 'squads' commands to group reviewers
