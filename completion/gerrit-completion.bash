@@ -29,7 +29,7 @@ _gerrit_completion() {
 
     COMPREPLY=()
 
-    opts="help config projects clone patches pa status st up draft assign checkout co rechecout reco ssh review submit abandon comment ninja web completion topic"
+    opts="help config projects clone patches pa status st up draft assign checkout co recheckout reco ssh review submit abandon comment ninja web completion topic"
 
     second="${COMP_WORDS[1]}"
     cur="${COMP_WORDS[COMP_CWORD]}"
