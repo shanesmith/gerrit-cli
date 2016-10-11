@@ -343,7 +343,8 @@ var squadCmd = program.command("squad")
   .action(function(subCommand) {
 
     if (arguments.length === 1) {
-      throw new cli.CliError("Please provide a subcommand.");
+      logger.error("Please provide a subcommand.");
+      return this.help();
     }
 
     if (subCommand === "create") {
