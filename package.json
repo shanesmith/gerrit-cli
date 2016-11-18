@@ -29,11 +29,22 @@
     "word-wrap": "^1.0.3"
   },
   "scripts": {
-    "test": "jshint bin/gerrit lib/*"
+    "test": "npm run lint && npm run unit",
+    "lint": "jshint bin/gerrit lib/* test/*",
+    "unit": "mocha --require ./test/helpers.js ./test/*.test.js"
   },
   "files": [
     "bin",
     "lib",
     "completion"
-  ]
+  ],
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "chai-as-promised": "^6.0.0",
+    "mocha": "^3.1.2",
+    "proxyquire": "^1.7.10",
+    "sinon": "^1.17.6",
+    "sinon-as-promised": "^4.0.2",
+    "sinon-chai": "^2.8.0"
+  }
 }

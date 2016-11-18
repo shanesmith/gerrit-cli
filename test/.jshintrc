@@ -1,0 +1,10 @@
+{
+  "extends": "../.jshintrc",
+  "mocha": true,
+  "expr": true,
+  "globals": {
+    "expect": false,
+    "sinon": false,
+    "fixture": false
+  }
+}
