@@ -2,7 +2,10 @@
   "name": "gerrit-cli",
   "version": "0.1.1",
   "description": "Gerrit in your command lines.",
-  "keywords": ["gerrit", "git"],
+  "keywords": [
+    "gerrit",
+    "git"
+  ],
   "license": "MIT",
   "author": "Shane Smith <shane.smith.baz@gmail.com> (http://shane.smudel.ca)",
   "main": "lib/cli",
