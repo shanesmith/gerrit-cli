@@ -16,7 +16,7 @@
     "ger": "bin/gerrit"
   },
   "dependencies": {
-    "bluebird": "^2.3.2",
+    "bluebird": "^3.4.6",
     "chalk": "^1.1.0",
     "cli-table": "^0.3.1",
     "commander": "^2.7.0",
