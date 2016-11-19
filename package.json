@@ -7,7 +7,7 @@
     "git"
   ],
   "license": "MIT",
-  "author": "Shane Smith <shane.smith.baz@gmail.com> (http://shane.smudel.ca)",
+  "author": "Shane Smith <shane.wm.smith@gmail.com> (http://shane.smudel.ca)",
   "main": "lib/cli",
   "repository": "shanesmith/gerrit-cli",
   "preferGlobal": true,
