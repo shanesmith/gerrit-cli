@@ -23,9 +23,9 @@
     "chalk": "^1.1.0",
     "cli-table": "^0.3.1",
     "commander": "^2.7.0",
+    "fs-extra": "^1.0.0",
     "inquirer": "^0.9.0",
     "lodash": "^4.17.2",
-    "mkdirp": "^0.5.0",
     "moment": "^2.10.2",
     "open": "0.0.5",
     "sync-exec": "^0.4.0",
@@ -34,7 +34,7 @@
   "scripts": {
     "test": "npm run lint && npm run unit",
     "lint": "jshint bin/gerrit lib/* test/*",
-    "unit": "mocha --require ./test/helpers.js ./test/*.test.js"
+    "unit": "mocha ./test/*.test.js"
   },
   "files": [
     "bin",

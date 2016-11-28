@@ -8,6 +8,8 @@ var sinon = require("sinon");
 var sinonChai = require("sinon-chai");
 var chaiAsPromised = require("chai-as-promised");
 
+var logger = require("../lib/logger");
+
 require("colors/safe").enabled = false; // cli-table dependency
 require("chalk").enabled = false;
 
@@ -53,25 +55,90 @@ sinon.test = function(callback) {
 
 };
 
-var fixtureCache = {};
-var fixtureBasePath = "test/fixtures";
+var helpers = {};
 
-global.fixture = {
+helpers.fixture = (function() {
 
-  load: function(name) {
-    var fixturePath = path.join(fixtureBasePath, name);
+  var fixtureCache = {};
+  var fixtureBasePath = "test/fixtures";
 
-    if (fixtureCache[fixturePath]) {
-      return fixtureCache[fixturePath];
-    }
+  return {
 
-    var contents = fs.readFileSync(fixturePath, {encoding: "utf8"});
-    fixtureCache[fixturePath] = contents;
-    return contents;
-  },
+    load: function(name) {
+      var fixturePath = path.join(fixtureBasePath, name);
 
-  loadJson: function(name) {
-    return JSON.parse(global.fixture.load(name + ".json"));
-  }
+      if (fixtureCache[fixturePath]) {
+        return fixtureCache[fixturePath];
+      }
+
+      var contents = fs.readFileSync(fixturePath, {encoding: "utf8"});
+      fixtureCache[fixturePath] = contents;
+      return contents;
+    },
+
+      loadJson: function(name) {
+        return JSON.parse(helpers.fixture.load(name + ".json"));
+      }
+
+  };
+
+}());
+
+helpers.setupLogSpy = function() {
+
+  var logSpy = {};
+
+  beforeEach(function() {
+
+    logger.LEVELS.forEach(function(level) {
+
+      var spy = sinon.spy(function(line) {
+        if (logSpy[level].output !== "") {
+          logSpy[level].output += "\n";
+        }
+        logSpy[level].output += line;
+      });
+
+      logger.on(level, spy);
+
+      logSpy[level] = {
+        spy: spy,
+        output: ""
+      };
+
+    });
+
+  });
+
+  afterEach(function() {
+
+    logger.LEVELS.forEach(function(level) {
+
+      logger.removeListener(level, logSpy[level].spy);
+
+      delete logSpy[level];
+
+    });
+
+  });
+
+  return logSpy;
 
 };
+
+helpers.sandboxEach = function(fn) {
+
+  var sandbox;
+
+  beforeEach(function() {
+    sandbox = sinon.sandbox.create();
+    fn(sandbox);
+  });
+
+  afterEach(function() {
+    sandbox.restore();
+  });
+
+};
+
+module.exports = helpers;

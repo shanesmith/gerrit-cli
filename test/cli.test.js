@@ -1,5 +1,7 @@
 "use strict";
 
+var helpers = require("./helpers");
+
 var _ = require("lodash");
 var Q = require("bluebird");
 var moment = require("moment");
@@ -7,7 +9,6 @@ var proxyquire = require("proxyquire");
 
 var git = require("../lib/git");
 var gerrit = require("../lib/gerrit");
-var logger = require("../lib/logger");
 var prompter = require("../lib/prompter");
 
 var openSpy = sinon.spy();
@@ -20,8 +21,7 @@ describe("cli", function() {
 
   var sandbox;
 
-  var logSpy = {};
-  var logOutput = {};
+  var logSpy = helpers.setupLogSpy();
 
   var requirementTestDef = {
 
@@ -96,46 +96,18 @@ describe("cli", function() {
 
     openSpy.reset();
 
-    logger.LEVELS.forEach(function(level) {
-
-      var spy = sinon.spy(function(line) {
-        if (logOutput[level] !== "") {
-          logOutput[level] += "\n";
-        }
-        logOutput[level] += line;
-      });
-
-      logSpy[level] = spy;
-
-      logOutput[level] = "";
-
-      logger.on(level, spy);
-
-    });
-
   });
 
   afterEach(function() {
 
     sandbox.restore();
 
-    logger.LEVELS.forEach(function(level) {
-
-      logger.removeListener(level, logSpy[level]);
-
-    });
-
-    logSpy = {};
-    logOutput = {};
-
   });
 
   describe("CliError", function() {
 
     it("should be an Error", function() {
-
-      expect(cli).to.have.property("CliError").that.inheritsfrom(Error);
-
+      expect(cli.CliError).to.inheritsfrom(Error);
     });
 
     it("should set a message", function() {
@@ -174,7 +146,7 @@ describe("cli", function() {
 
           expect(gerrit.configExists).to.have.been.calledWith("foo");
 
-          expect(logOutput.info).to.equal([
+          expect(logSpy.info.output).to.equal([
             "name = foo",
             "host = host",
             "user = user",
@@ -226,7 +198,7 @@ describe("cli", function() {
       return cli.config(null, {all: true})
         .then(function() {
 
-          expect(logOutput.info).to.equal([
+          expect(logSpy.info.output).to.equal([
             "name = foo",
             "host = foo_host",
             "user = foo_user",
@@ -383,7 +355,7 @@ describe("cli", function() {
 
           expect(gerrit.projects).to.have.been.calledWith(configName);
 
-          expect(logOutput.info).to.equal(projects.join("\n"));
+          expect(logSpy.info.output).to.equal(projects.join("\n"));
 
         });
 
@@ -482,7 +454,7 @@ describe("cli", function() {
 
   describe("_patches_map", function() {
 
-    var patchList = fixture.loadJson("patches");
+    var patchList = helpers.fixture.loadJson("patches");
     var patchObj = patchList[0];
 
     var expectedResult = {
@@ -561,7 +533,7 @@ describe("cli", function() {
 
   describe("patches()", function() {
 
-    var patchList = fixture.loadJson("patches");
+    var patchList = helpers.fixture.loadJson("patches");
 
     var testFormat = "%n foo %t %% %b";
 
@@ -576,7 +548,7 @@ describe("cli", function() {
         return cli.patches({oneline: true, format: testFormat, opts: _.constant({})})
           .then(function() {
 
-            expect(logOutput.info).to.equal([
+            expect(logSpy.info.output).to.equal([
               "1.number foo 1.topic % 1.branch",
               "2.number foo 2.topic % 2.branch"
             ].join("\n"));
@@ -596,7 +568,7 @@ describe("cli", function() {
         return cli.patches({table: true, format: testFormat, opts: _.constant({})})
           .then(function() {
 
-            expect(logOutput.info).to.equal([
+            expect(logSpy.info.output).to.equal([
               " Number    Topic    Branch   ",
               " 1.number  1.topic  1.branch ",
               " 2.number  2.topic  2.branch "
@@ -617,7 +589,7 @@ describe("cli", function() {
         return cli.patches({vertical: true, format: testFormat, opts: _.constant({})})
           .then(function() {
 
-            expect(logOutput.info).to.equal([
+            expect(logSpy.info.output).to.equal([
               " Number:  1.number ",
               " Topic:   1.topic  ",
               " Branch:  1.branch ",
@@ -837,9 +809,9 @@ describe("cli", function() {
 
           expect(gerrit.assign).to.have.been.calledWith(revList, reviewersArray, "remote");
 
-          expect(logOutput.info).to.equal("hash.description\nAssigned reviewer r1\nAssigned reviewer r3");
+          expect(logSpy.info.output).to.equal("hash.description\nAssigned reviewer r1\nAssigned reviewer r3");
 
-          expect(logOutput.warn).to.equal("Could not assign reviewer r2");
+          expect(logSpy.warn.output).to.equal("Could not assign reviewer r2");
 
         });
 
@@ -892,7 +864,7 @@ describe("cli", function() {
 
           expect(gerrit.assign).to.have.been.calledWith(selectedRevList, reviewersArray, "remote");
 
-          expect(logOutput.info).to.equal([
+          expect(logSpy.info.output).to.equal([
             "a",
             "Assigned reviewer r1",
             "",
@@ -957,7 +929,7 @@ describe("cli", function() {
 
           expect(gerrit.ssh).to.have.been.calledWith(command, "remote");
 
-          expect(logOutput.info).to.equal(output);
+          expect(logSpy.info.output).to.equal(output);
 
         });
 
@@ -1370,7 +1342,7 @@ describe("cli", function() {
 
       expect(gerrit.topic).to.have.been.calledWith("name", "upstream");
 
-      expect(logOutput.info).to.equal("result");
+      expect(logSpy.info.output).to.equal("result");
 
     }));
 
@@ -1387,7 +1359,7 @@ describe("cli", function() {
 
       expect(gerrit.topic).to.have.been.calledWith("name", "upstream");
 
-      expect(logOutput.info).to.equal("result");
+      expect(logSpy.info.output).to.equal("result");
 
     }));
 
@@ -1421,7 +1393,7 @@ describe("cli", function() {
 
         cli.squad.list("name");
 
-        expect(logOutput.info).to.equal("A, B, C");
+        expect(logSpy.info.output).to.equal("A, B, C");
 
       }));
 
@@ -1434,7 +1406,7 @@ describe("cli", function() {
 
         cli.squad.list();
 
-        expect(logOutput.info).to.equal("first: A, B\nsecond: C, D");
+        expect(logSpy.info.output).to.equal("first: A, B\nsecond: C, D");
 
       }));
       
@@ -1450,7 +1422,7 @@ describe("cli", function() {
 
         expect(gerrit.squad.set).to.have.been.calledWith("name", ["A", "B"]);
 
-        expect(logOutput.info).to.equal("Reviewer(s) \"A, B\" set to squad \"name\".");
+        expect(logSpy.info.output).to.equal("Reviewer(s) \"A, B\" set to squad \"name\".");
 
       }));
       
@@ -1466,7 +1438,7 @@ describe("cli", function() {
 
         expect(gerrit.squad.add).to.have.been.calledWith("name", ["A", "B"]);
 
-        expect(logOutput.info).to.equal("Reviewer(s) \"A, B\" added to squad \"name\".");
+        expect(logSpy.info.output).to.equal("Reviewer(s) \"A, B\" added to squad \"name\".");
 
       }));
       
@@ -1482,7 +1454,7 @@ describe("cli", function() {
 
         cli.squad.remove("name", ["A", "B"]);
 
-        expect(logOutput.info).to.equal("Reviewer(s) \"A, B\" removed from squad \"name\".");
+        expect(logSpy.info.output).to.equal("Reviewer(s) \"A, B\" removed from squad \"name\".");
 
       }));
 
@@ -1492,8 +1464,8 @@ describe("cli", function() {
 
         cli.squad.remove("name", ["A", "B", "C", "D"]);
 
-        expect(logOutput.warn).to.equal("Reviewer(s) \"C, D\" do not exist in squad \"name\".");
-        expect(logOutput.info).to.equal("Reviewer(s) \"A, B\" removed from squad \"name\".");
+        expect(logSpy.warn.output).to.equal("Reviewer(s) \"C, D\" do not exist in squad \"name\".");
+        expect(logSpy.info.output).to.equal("Reviewer(s) \"A, B\" removed from squad \"name\".");
 
       }));
       
@@ -1509,7 +1481,7 @@ describe("cli", function() {
 
         cli.squad.delete("name");
 
-        expect(logOutput.info).to.equal("Squad \"name\" deleted.");
+        expect(logSpy.info.output).to.equal("Squad \"name\" deleted.");
 
       }));
 
@@ -1525,7 +1497,7 @@ describe("cli", function() {
 
         cli.squad.rename("name", "newname");
 
-        expect(logOutput.info).to.equal("Squad \"name\" renamed to \"newname\".");
+        expect(logSpy.info.output).to.equal("Squad \"name\" renamed to \"newname\".");
 
       }));
       
