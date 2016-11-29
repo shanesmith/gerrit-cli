@@ -12,7 +12,7 @@
   "repository": "shanesmith/gerrit-cli",
   "preferGlobal": true,
   "engines": {
-    "node": ">=0.10.0"
+    "node": ">=0.12.0"
   },
   "bin": {
     "gerrit": "bin/gerrit",
@@ -28,7 +28,6 @@
     "lodash": "^4.17.2",
     "moment": "^2.10.2",
     "open": "0.0.5",
-    "sync-exec": "^0.4.0",
     "word-wrap": "^1.0.3"
   },
   "scripts": {
