@@ -2,6 +2,12 @@
 
 "use strict";
 
+// check if the command is "completion" 
+// before loading anything to make it faster 
+if (process.argv.length === 3 && process.argv[2] === "completion") {
+  outputCompletionAndExit();
+}
+
 var program = require("commander");
 var domain = require("domain").create();
 var Q = require("bluebird");
@@ -592,4 +598,24 @@ domain.run(function() {
   }
 });
 
+function outputCompletionAndExit() {
+  var fs = require("fs");
+  var path = require("path");
+
+  var code;
+  var output;
+  var filepath = path.join(__dirname, "..", "completion", "gerrit-completion.bash");
+
+  try {
+    code = 0;
+    output = fs.readFileSync(filepath, "utf-8");
+  }
+  catch (e) {
+    code = 1;
+    output = "echo 'Error reading autocompletion file.'";
+  }
+
+  console.log(output);
+  process.exit(code);
+}
 

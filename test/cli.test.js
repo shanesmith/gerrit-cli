@@ -1307,26 +1307,6 @@ describe("cli", function() {
     
   });
 
-  describe("completion()", function() {
-
-    it("print out completion", sinon.test(function() {
-
-      this.stub(process, "exit", _.noop);
-
-      this.stub(console, "log", _.noop);
-
-      this.stub(gerrit, "completion").returns("completion-content");
-
-      cli.completion();
-
-      expect(console.log).to.have.been.calledWith("completion-content");
-
-      expect(process.exit).to.have.been.calledWith(0);
-
-    }));
-    
-  });
-
   describe("topic()", function() {
 
     testRequirements(["inRepo"], cli.web);

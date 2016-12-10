@@ -827,18 +827,6 @@ describe("gerrit", function() {
 
   });
 
-  describe("completion()", function() {
-
-    it("should return the completion", sinon.test(function() {
-
-      this.stub(fs, "readFileSync").returns("completion content");
-
-      expect(gerrit.completion()).to.equals("completion content");
-
-    }));
-
-  });
-
   describe("topic()", function() {
 
     it("should create a topic branch and set it's upstream", sinon.test(function() { 
