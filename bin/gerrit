@@ -34,10 +34,16 @@ function wrap(text, options) {
 
 program.version(packagejson.version);
 
+program.option("--verbose", "Verbose output");
+
 program.on("*", function(args) {
   logger.error(util.format("Command \"%s\" does not exist.", args[0]));
   program.help();
   process.exit(1);
+});
+
+program.on("verbose", function() {
+  logger.enableDebug(true);
 });
 
 program.command("help [command]")
@@ -542,6 +548,10 @@ logger.on("error", logProcess(function(line) {
   console.error("gerrit " + chalk.red("ERROR") + " " + line);
 }));
 
+logger.on("debug", logProcess(function(line) {
+  console.log("gerrit " + chalk.cyan("DEBUG") + " " + line);
+}));
+
 function logProcess(lineOutputCallback) {
   return function(message, context) {
     message = message.split("\n");
@@ -591,11 +601,14 @@ domain.on("error", function(err) {
 /** Run it! **/
 
 domain.run(function() {
+
   program.parse(process.argv);
+
   if (program.rawArgs.length === 2) {
     // display help if no commands or options given
     program.help();
   }
+
 });
 
 function outputCompletionAndExit() {
