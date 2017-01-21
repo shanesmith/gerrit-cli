@@ -486,7 +486,7 @@ describe("gerrit", function() {
         callIndex++;
 
         if (callIndex % 4 === 0) {
-          return Q.reject();
+          return Q.reject("error");
         }
 
         return Q.resolve();
@@ -510,12 +510,12 @@ describe("gerrit", function() {
               {success: true, reviewer: "reviewer-one"},
               {success: true, reviewer: "squad-one"},
               {success: true, reviewer: "squad-two"},
-              {success: false, reviewer: "reviewer-two"}
+              {success: false, reviewer: "reviewer-two", error: "error"}
             ],[
               {success: true, reviewer: "reviewer-one"},
               {success: true, reviewer: "squad-one"},
               {success: true, reviewer: "squad-two"},
-              {success: false, reviewer: "reviewer-two"}
+              {success: false, reviewer: "reviewer-two", error: "error"}
             ]
           ]);
 

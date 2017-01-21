@@ -799,7 +799,7 @@ describe("cli", function() {
       this.stub(gerrit, "assign").resolves([
         Q.resolve([
           {success: true,  reviewer: reviewersArray[0]}, 
-          {success: false, reviewer: reviewersArray[1]},
+          {success: false, reviewer: reviewersArray[1], error: "some error"},
           {success: true,  reviewer: reviewersArray[2]}
         ])
       ]);
@@ -811,7 +811,7 @@ describe("cli", function() {
 
           expect(logSpy.info.output).to.equal("hash.description\nAssigned reviewer r1\nAssigned reviewer r3");
 
-          expect(logSpy.warn.output).to.equal("Could not assign reviewer r2");
+          expect(logSpy.warn.output).to.equal("Could not assign reviewer r2\nsome error");
 
         });
 
