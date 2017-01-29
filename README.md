@@ -24,13 +24,13 @@ Bash tab-completion is also available and can be enabled by adding the following
 line to your ~/.bashrc file.
 
 ```
-eval "$(gerrit completion)"
+source <(gerrit completion)
 ```
 
 
 ## Requirements
 
-Tested with Gerrit 2.7.
+Tested with Gerrit 2.12.3, although most likely also works on older versions.
 
 
 ## Usage
@@ -44,26 +44,29 @@ detailed help.
 ### Commands
 
 ```
-help          View help for specified command.
-config        Manage server configurations
-projects      Display available projects on server.
-clone         Clone a project from server.
-patches       List details of patches on the server for the current project.
-assign        Assign reviewers to the current patch.
-up            Push patches of current topic to server for review.
-draft         Push patches of current topic to server as drafts.
-checkout      Fetch and checkout topic branch from server.
-recheckout    Re-checkout current topic.
-ssh           Run arbitrary gerrit command on server.
-review        Post a review for the current topic.
-submit        Submit the current topic for merging.
-abandon       Abandon the current topic.
-comment       Post a comment on the current topic.
-ninja         Push patch to server then immediately submit for merging.
-web           Open browser to gerrit web page for current patch.
-completion    Enables tab completion for gerrit-cli.
-topic         Create new topic branch.
-squad         Manage squads of reviewers.
+help            View help for specified command.
+config          Manage server configurations
+projects        Display available projects on server.
+clone           Clone a project from server.
+add-remote      Add project remote for existing repository.
+install-hook    Installs the commit message hook.
+patches         List details of patches on the server for the current project.
+status          Show full details of a specific patch, including comments.
+assign          Assign reviewers to the current patch.
+up              Push patches of current topic to server for review.
+draft           Push patches of current topic to server as drafts.
+checkout        Fetch and checkout topic branch from server.
+recheckout      Re-checkout current topic.
+ssh             Run arbitrary gerrit command on server.
+review          Post a review for the current topic.
+submit          Submit the current topic for merging.
+abandon         Abandon the current topic.
+comment         Post a comment on the current topic.
+ninja           Push patch to server then immediately submit for merging.
+web             Open browser to gerrit web page for current patch.
+completion      Enables tab completion for gerrit-cli.
+topic           Create new topic branch.
+squad           Manage squads of reviewers.
 ```
 
 
@@ -168,6 +171,6 @@ default browser to the patch we currently have checked out.
 
 # License
 
-Copyright (c) 2013 Shane Smith
+Copyright (c) 2016 Shane Smith
 
 Licensed under the MIT license
