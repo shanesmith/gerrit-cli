@@ -1,62 +1,123 @@
 #!/bin/bash
 
-array_contains() {
+__GERRIT_COMMANDS="help config projects clone patches status up draft assign checkout recheckout ssh review submit abandon comment ninja web completion topic squad team"
+
+__gerrit_array_index() {
   # $1 is needle
   # #2+ is haystack
   # array_contains "needle" "${haystack[@]}"
-  local e
-  for e in "${@:2}"; do [[ "$e" == "$1" ]] && return 0; done
-  return 1
+  local i
+
+  local needle="$1"
+
+  shift
+
+  for (( i=0; $# > 0; i++ )); do
+    if [[ "$1" == "$needle" ]]; then
+      echo "$i"
+      return
+    fi
+    shift
+  done
+
+  echo -1
 }
 
-_gerrit_assign() {
-  local current_names="$@"
-  local matched_names=( $(compgen -W "$(git config --get-all gerrit.reviewers)" -- $cur) )
+__gerrit_array_contains() {
+  local index=$(__gerrit_array_index "$@")
+  [[ "$index" -ne -1 ]]
+}
 
-  COMPREPLY=()
+__gerrit_get_reviewers() {
+  git config --get-all gerrit.reviewers
+}
 
-  for name in "${matched_names[@]}"; do
+__gerrit_get_squads() {
+  git config --get-regex "^gerrit-squad\." | awk -F. '{print "@" $2}' | uniq
+}
 
-    if ! array_contains $name ${current_names[@]}; then
-      COMPREPLY+=( "$name" )
+__gerrit_get_assign_list() {
+
+  local all_names="$(__gerrit_get_reviewers)"
+
+  local all_squads="$(__gerrit_get_squads)"
+
+  local name_list=()
+
+  for name in $all_names $all_squads; do
+
+    if ! __gerrit_array_contains "$name" "${COMP_WORDS[@]}"; then
+      name_list+=( "$name" )
     fi
 
   done
+
+  echo "${name_list[@]}"
 }
 
-_gerrit_completion() {
-    local cur prev opts
+__gerrit_find_command() {
 
-    COMPREPLY=()
+    local word
 
-    opts="help config projects clone patches pa status st up draft assign checkout co recheckout reco ssh review submit abandon comment ninja web completion topic"
+    for word in "${COMP_WORDS[@]}"; do
 
-    second="${COMP_WORDS[1]}"
-    cur="${COMP_WORDS[COMP_CWORD]}"
-    prev="${COMP_WORDS[COMP_CWORD-1]}"
+      if __gerrit_array_contains "$word" $__GERRIT_COMMANDS; then
+        echo "$word"
+        return 0
+      fi
 
-    if [[ $COMP_CWORD -eq 1 ]]; then
+    done
 
-      COMPREPLY=( $(compgen -W "${opts}" -- $cur) )
-
-    else
-
-      case "${second}" in
-        assign)
-          _gerrit_assign "${COMP_WORDS[@]:2}"
-          ;;
-        up)
-          if [[ ${COMP_WORDS[2]} = "--assign" ]]; then
-            _gerrit_assign "${COMP_WORDS[@]:3}"
-          elif [[ ${COMP_WORDS[3]} = "--assign" ]]; then
-            _gerrit_assign "${COMP_WORDS[@]:4}"
-          fi
-          ;;
-      esac
-
-    fi
+    return 1
 
 }
 
-complete -F _gerrit_completion gerrit
-complete -F _gerrit_completion ger
+__gerrit_completion() {
+
+    local word_list
+
+    local squad_commands="list set add remove delete rename"
+
+    local current_word="$2"
+
+    local previous_word="$3"
+
+    local current_command="$(__gerrit_find_command)"
+
+    case "$current_command" in
+
+      "")
+        word_list="$__GERRIT_COMMANDS"
+        ;;
+
+      squad|team)
+        if [[ "$previous_word" =~ ^(squad|team)$ ]]; then
+          word_list="$squad_commands"
+        elif __gerrit_array_contains "$previous_word" $squad_commands; then
+          word_list="$(__gerrit_get_squads)"
+        fi
+        ;;
+
+      assign)
+        word_list="$(__gerrit_get_assign_list)"
+        ;;
+
+      help)
+        if [[ "$previous_word" = "help" ]]; then
+          word_list="$__GERRIT_COMMANDS"
+        fi
+        ;;
+
+      up|draft)
+        if __gerrit_array_contains "--assign" "${COMP_WORDS[@]:0:$COMP_CWORD}"; then
+          word_list="$(__gerrit_get_assign_list)"
+        fi
+        ;;
+
+    esac
+
+    COMPREPLY=( $(compgen -W "$word_list" -- "$current_word") )
+
+}
+
+complete -F __gerrit_completion gerrit ger
