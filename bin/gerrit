@@ -135,11 +135,11 @@ patchesCmd.optionHelp = function() {
 };
 
 program.command("status [what]")
+  .alias("st")
   .description([
     "Show full details of a specific patch, including comments.",
     "Show full details of a specific patch, including comments. By defaut shows the status of the current patch, provide a patch number or topic to view status of a specific patch."
   ])
-  .alias("st")
   .action(cli.status);
 
 program.command("assign")
@@ -320,6 +320,7 @@ program.command("completion")
   .action(cli.completion);
 
 program.command("topic <name> [upstream]")
+  .alias("tp")
   .description([
     "Create new topic branch.",
     "Create new topic branch tracking the given upstream. If upstream is not specified then it will be set to current branch's upstream."
