@@ -83,7 +83,7 @@ describe("gerrit", function() {
 
       this.stub(git, "config");
 
-      var urls = { 
+      var urls = {
         "user@example.com:foo/bar.git": {
           host: "example.com",
           port: null,
@@ -94,7 +94,7 @@ describe("gerrit", function() {
           host: "example.com",
           port: null,
           user: null,
-          project: "foo/bar" 
+          project: "foo/bar"
         },
         "ssh://user@example.com:1234/foo/bar.git": {
           host: "example.com",
@@ -572,8 +572,6 @@ describe("gerrit", function() {
 
           expect(git.show).to.have.been.calledWith(["push", "remote-name", "HEAD:refs/for/p-branch/topic"]);
 
-          expect(git.config).to.not.have.been.calledWith("branch.topic.draft", "yes");
-
         });
 
     }));
@@ -584,27 +582,6 @@ describe("gerrit", function() {
         .then(function() {
 
           expect(git.show).to.have.been.calledWith(["push", "remote-name", "HEAD:refs/drafts/p-branch/topic"]);
-
-          expect(git.config).to.have.been.calledWith("branch.topic.draft", "yes");
-          
-        });
-
-    }));
-
-    it("should prompt to undraft", sinon.test(function() {
-
-      git.config.returns("yes");
-
-      this.stub(git.config, "unset", _.noop);
-
-      this.stub(prompter, "confirm").resolves(true);
-
-      return gerrit.up()
-        .then(function() {
-
-          expect(git.show).to.have.been.calledWith(["push", "remote-name", "HEAD:refs/for/p-branch/topic"]);
-
-          expect(git.config.unset).to.have.been.called; //With("branch.topic.draft");
 
         });
 
@@ -827,9 +804,32 @@ describe("gerrit", function() {
 
   });
 
+  describe("undraft()", function() {
+
+    testRequirements(["inRepo"], gerrit.undraft);
+
+    sandboxEach(function(sandbox) {
+
+      sandbox.stub(gerrit, "parseRemote").returns({name: "remote-name", project: "project"});
+
+    });
+
+    it("should undraft the patch", sinon.test(function() {
+
+      this.stub(gerrit_ssh, "run", _.noop);
+
+      return gerrit.undraft("hash", "remote")
+        .then(function() {
+          expect(gerrit_ssh.run).to.have.been.calledWith("review --publish --project 'project' hash", {name: "remote-name", project: "project"});
+        });
+
+    }));
+
+  });
+
   describe("topic()", function() {
 
-    it("should create a topic branch and set it's upstream", sinon.test(function() { 
+    it("should create a topic branch and set it's upstream", sinon.test(function() {
 
       this.stub(git.branch, "create").returns("q");
       this.stub(git.branch, "setUpstream").returns("q");
@@ -978,5 +978,5 @@ describe("gerrit", function() {
     });
 
   });
-  
+
 });

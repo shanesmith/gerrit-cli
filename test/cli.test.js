@@ -1,6 +1,7 @@
 "use strict";
 
 var helpers = require("./helpers");
+var sandboxEach = helpers.sandboxEach;
 
 var _ = require("lodash");
 var Q = require("bluebird");
@@ -10,6 +11,7 @@ var proxyquire = require("proxyquire");
 var git = require("../lib/git");
 var gerrit = require("../lib/gerrit");
 var prompter = require("../lib/prompter");
+var gerrit_ssh = require("../lib/gerrit-ssh");
 
 var openSpy = sinon.spy();
 
@@ -44,6 +46,28 @@ describe("cli", function() {
         git.branch.hasUpstream.returns(false);
 
         expect(fn).to.throw(cli.CliError, "Topic branch requires an upstream.");
+
+      }));
+
+    },
+
+    "remoteUpstream": function(fn) {
+
+      it("should throw if branch doesn't have an upstream", sinon.test(function() {
+
+        git.branch.hasUpstream.returns(false);
+
+        expect(fn).to.throw(cli.CliError, "Topic branch requires an upstream.");
+
+      }));
+
+      it("should throw if branch's upstream is not remote", sinon.test(function() {
+
+        git.branch.hasUpstream.returns(true);
+
+        git.branch.isRemote.returns(false);
+
+        expect(fn).to.throw(cli.CliError, "Topic's upstream is not a remote branch.");
 
       }));
 
@@ -93,6 +117,10 @@ describe("cli", function() {
     sandbox.stub(git, "isIndexClean").returns(true);
 
     sandbox.stub(gerrit.squad, "exists").returns(true);
+
+    sandbox.stub(git.branch, "upstream").returns("upstream");
+
+    sandbox.stub(git.branch, "isRemote").returns(true);
 
     openSpy.reset();
 
@@ -798,7 +826,7 @@ describe("cli", function() {
 
       this.stub(gerrit, "assign").resolves([
         Q.resolve([
-          {success: true,  reviewer: reviewersArray[0]}, 
+          {success: true,  reviewer: reviewersArray[0]},
           {success: false, reviewer: reviewersArray[1], error: "some error"},
           {success: true,  reviewer: reviewersArray[2]}
         ])
@@ -893,7 +921,7 @@ describe("cli", function() {
 
       this.stub(gerrit, "assign").resolves([
         Q.resolve([
-          {success: true,  reviewer: reviewersArray[0]}, 
+          {success: true,  reviewer: reviewersArray[0]},
           {success: false, reviewer: reviewersArray[1]},
           {success: true,  reviewer: reviewersArray[2]}
         ])
@@ -910,7 +938,7 @@ describe("cli", function() {
         });
 
     }));
-    
+
   });
 
   describe("ssh()", function() {
@@ -934,18 +962,30 @@ describe("cli", function() {
         });
 
     }));
-    
+
   });
 
   describe("up()", function() {
 
-    testRequirements(["inRepo", "upstream"], cli.up);
+    testRequirements(["inRepo", "remoteUpstream"], cli.up);
 
-    it("should send up the patch", sinon.test(function() {
+    sandboxEach(function(sandbox) {
 
-      this.stub(gerrit, "up").resolves(null);
+      sandbox.stub(gerrit, "up").resolves(null);
 
-      this.stub(git, "revList").returns(["a"]);
+      sandbox.stub(git, "revList").returns(["a"]);
+
+      sandbox.stub(git, "getChangeId").returns("Iabc123");
+
+      sandbox.stub(gerrit, "parseRemote").resolves({foo: "bar"});
+
+      sandbox.stub(gerrit_ssh, "query").resolves([]);
+
+      sandbox.stub(git, "hashFor").returns("hash");
+
+    });
+
+    it("should push the patch", sinon.test(function() {
 
       return cli.up({remote: "remote", branch: "branch", draft: false, assign: []})
         .then(function() {
@@ -956,15 +996,137 @@ describe("cli", function() {
 
     }));
 
-    it("should assign reviewers and post comments", sinon.test(function() {
+    describe("if the last patch set is the same as the current commit", function() {
 
-      this.stub(gerrit, "up").resolves(null);
+      it("should throw if the last patch set is not a draft", sinon.test(function() {
+
+        var patch_result = [{
+          patchSets: [{
+            revision: "bogus"
+          }, {
+            revision: "hash",
+            isDraft: false
+          }]
+        }];
+
+        gerrit_ssh.query.resolves(patch_result);
+
+        expect(cli.up({remote: "remote", branch: "branch", draft: false, assign: []}))
+          .to.be.rejectedWith(cli.CliError);
+
+      }));
+
+      it("should throw if trying to push a draft", sinon.test(function() {
+
+        var patch_result = [{
+          patchSets: [{
+            revision: "bogus"
+          }, {
+            revision: "hash",
+            isDraft: true
+          }]
+        }];
+
+        gerrit_ssh.query.resolves(patch_result);
+
+        expect(cli.up({remote: "remote", branch: "branch", draft: true, assign: []}))
+          .to.be.rejectedWith(cli.CliError);
+
+      }));
+
+      describe("otherwise should prompt to undraft", function() {
+
+        it("should undraft if answer yes", sinon.test(function() {
+
+          var patch_result = [{
+            patchSets: [{
+              revision: "bogus"
+            }, {
+              revision: "hash",
+              isDraft: true
+            }]
+          }];
+
+          gerrit_ssh.query.resolves(patch_result);
+
+          this.stub(prompter, "confirm").resolves(true);
+
+          this.stub(gerrit, "undraft").resolves(null);
+
+          return cli.up({remote: "remote", branch: "branch", draft: false, assign: []})
+            .then(function() {
+
+              expect(gerrit.undraft).to.have.been.calledWith("hash", "remote");
+
+              expect(gerrit.up).to.not.have.been.called;
+
+            });
+
+        }));
+
+        it("should not do anything if answer no", sinon.test(function() {
+
+          var patch_result = [{
+            patchSets: [{
+              revision: "bogus"
+            }, {
+              revision: "hash",
+              isDraft: true
+            }]
+          }];
+
+          gerrit_ssh.query.resolves(patch_result);
+
+          this.stub(prompter, "confirm").resolves(false);
+
+          this.stub(gerrit, "undraft").resolves(null);
+
+          return cli.up({remote: "remote", branch: "branch", draft: false, assign: []})
+            .then(function() {
+
+              expect(gerrit.undraft).to.not.have.been.called;
+
+              expect(gerrit.up).to.not.have.been.called;
+
+            });
+
+        }));
+
+      });
+
+    });
+
+    it("should prompt to push the commit as a draft if the last patch set was a draft", sinon.test(function() {
+
+      var patch_result = [{
+        patchSets: [{
+          revision: "bogus"
+        }, {
+          revision: "notHash",
+          isDraft: true
+        }]
+      }];
+
+      gerrit_ssh.query.resolves(patch_result);
+
+      this.stub(prompter, "confirm").resolves(true);
+
+      return cli.up({remote: "remote", branch: "branch", draft: false, assign: []})
+        .then(function() {
+
+          expect(prompter.confirm).to.have.been.called;
+
+          expect(gerrit.up).to.have.been.calledWith("remote", "branch", true);
+
+        });
+
+    }));
+
+    it("should assign reviewers and post comments", sinon.test(function() {
 
       this.stub(cli, "comment").resolves(null);
 
       this.stub(cli, "assign").resolves(null);
-
-      this.stub(git, "revList").returns(["a"]);
 
       return cli.up({remote: "remote", branch: "branch", draft: false, assign: ["joe", "shmoe"], comment: "comment"})
         .then(function() {
@@ -979,13 +1141,11 @@ describe("cli", function() {
 
     it("should prompt to assign or comment on all patches if multiple found", sinon.test(function() {
 
-      this.stub(gerrit, "up").resolves(null);
-
       this.stub(cli, "comment").resolves(null);
 
       this.stub(cli, "assign").resolves(null);
 
-      this.stub(git, "revList").returns(["a", "b", "c"]);
+      git.revList.returns(["a", "b", "c"]);
 
       this.stub(prompter, "confirm").resolves(true);
 
@@ -1003,13 +1163,11 @@ describe("cli", function() {
 
     it("should prompt for interactive patch choice if multiple found and denied assigning or commenting all", sinon.test(function() {
 
-      this.stub(gerrit, "up").resolves(null);
-
       this.stub(cli, "comment").resolves(null);
 
       this.stub(cli, "assign").resolves(null);
 
-      this.stub(git, "revList").returns(["a", "b", "c"]);
+      git.revList.returns(["a", "b", "c"]);
 
       this.stub(prompter, "confirm").resolves(false);
 
@@ -1024,7 +1182,7 @@ describe("cli", function() {
 
 
     }));
-    
+
   });
 
   describe("checkout", function() {
@@ -1043,7 +1201,7 @@ describe("cli", function() {
         });
 
     }));
-    
+
   });
 
   describe("recheckout", function() {
@@ -1066,7 +1224,7 @@ describe("cli", function() {
         });
 
     }));
-    
+
   });
 
   var _review_args = {
@@ -1130,7 +1288,7 @@ describe("cli", function() {
               expect(prompter.confirm).to.not.have.been.called;
 
               var ee = expect(gerrit.review);
-                
+
               ee.to.have.been.calledWith.apply(ee, ["A"].concat(review_args.gerrit, "remote"));
 
             });
@@ -1231,13 +1389,17 @@ describe("cli", function() {
 
   describe("ninja()", function() {
 
-    testRequirements(["inRepo", "upstream"], cli.ninja);
+    testRequirements(["inRepo", "remoteUpstream"], cli.ninja);
 
     it("should push and submit", sinon.test(function() {
 
       this.stub(git, "isDetachedHead").returns(false);
 
       this.stub(git, "revList").returns(["A"]);
+
+      this.stub(gerrit, "parseRemote").resolves({foo: "bar"});
+
+      this.stub(gerrit_ssh, "query").resolves([]);
 
       this.stub(gerrit, "up").resolves(null);
 
@@ -1262,6 +1424,10 @@ describe("cli", function() {
 
       this.stub(git, "revList").returns(["A", "B", "C"]);
 
+      this.stub(gerrit, "parseRemote").resolves({foo: "bar"});
+
+      this.stub(gerrit_ssh, "query").resolves([]);
+
       this.stub(gerrit, "up").resolves(null);
 
       this.stub(cli, "submit").resolves(null);
@@ -1282,7 +1448,7 @@ describe("cli", function() {
         });
 
     }));
-    
+
   });
 
   describe("web()", function() {
@@ -1304,7 +1470,7 @@ describe("cli", function() {
         });
 
     }));
-    
+
   });
 
   describe("topic()", function() {
@@ -1312,8 +1478,6 @@ describe("cli", function() {
     testRequirements(["inRepo"], cli.web);
 
     it("should create a topic branch", sinon.test(function() {
-
-      this.stub(git.branch, "isRemote").returns(true);
 
       this.stub(gerrit, "topic").returns("result");
 
@@ -1327,10 +1491,6 @@ describe("cli", function() {
     }));
 
     it("should use the current branch's upstream if none provided", sinon.test(function() {
-
-      this.stub(git.branch, "upstream").returns("upstream");
-
-      this.stub(git.branch, "isRemote").returns(true);
 
       this.stub(gerrit, "topic").returns("result");
 
@@ -1353,12 +1513,12 @@ describe("cli", function() {
 
     it("should throw if the upstream is not a remote branch", sinon.test(function() {
 
-      this.stub(git.branch, "isRemote").returns(false);
+      git.branch.isRemote.returns(false);
 
       expect(_.partial(cli.topic, "name", "upstream")).to.throw(cli.CliError);
 
     }));
-    
+
   });
 
   describe("squad", function() {
@@ -1389,7 +1549,7 @@ describe("cli", function() {
         expect(logSpy.info.output).to.equal("first: A, B\nsecond: C, D");
 
       }));
-      
+
     });
 
     describe("set()", function() {
@@ -1405,7 +1565,7 @@ describe("cli", function() {
         expect(logSpy.info.output).to.equal("Reviewer(s) \"A, B\" set to squad \"name\".");
 
       }));
-      
+
     });
 
     describe("add()", function() {
@@ -1421,7 +1581,7 @@ describe("cli", function() {
         expect(logSpy.info.output).to.equal("Reviewer(s) \"A, B\" added to squad \"name\".");
 
       }));
-      
+
     });
 
     describe("remove()", function() {
@@ -1448,7 +1608,7 @@ describe("cli", function() {
         expect(logSpy.info.output).to.equal("Reviewer(s) \"A, B\" removed from squad \"name\".");
 
       }));
-      
+
     });
 
     describe("delete()", function() {
@@ -1480,9 +1640,9 @@ describe("cli", function() {
         expect(logSpy.info.output).to.equal("Squad \"name\" renamed to \"newname\".");
 
       }));
-      
+
     });
-    
+
   });
 
 });

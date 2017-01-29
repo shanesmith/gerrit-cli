@@ -25,7 +25,7 @@ describe("git", function() {
       expect(err.output).to.equal("output");
       expect(err.error).to.equal("error");
     });
-    
+
   });
 
   describe("exec()", function() {
@@ -203,12 +203,34 @@ describe("git", function() {
 
     it("should return a decription of the hash", sinon.test(function() {
 
-      this.stub(git, "exec").withArgs("show --no-patch --format='%%h %%s' %s", "hash").returns("description");
+      this.stub(git, "exec").withArgs("show --no-patch --format='%s' %s", "%h %s", "hash").returns("description");
 
       expect(git.describeHash("hash")).to.be.equal("description");
 
     }));
 
+  });
+
+  describe("commitInfo", function() {
+
+    it("should return commit info", sinon.test(function() {
+
+      this.stub(git, "exec").withArgs("show --no-patch --format='%s' %s", "format", "hash").returns("info");
+
+      expect(git.commitInfo("hash", "format")).to.be.equal("info");
+
+    }));
+
+  });
+
+  describe("getChangeId", function() {
+    it("should return the commit's ChangeId", sinon.test(function() {
+
+      this.stub(git, "exec").withArgs("show --no-patch --format='%s' %s", "%b", "hash").returns("blah blah\nChange-Id: Iabc123\nblah blah");
+
+      expect(git.getChangeId("hash")).to.equal("Iabc123");
+
+    }));
   });
 
   describe("config", function() {
@@ -267,7 +289,7 @@ describe("git", function() {
         expect(git.config.set).to.have.been.calledWith("key", ["value"], {option: "option"});
 
       }));
-      
+
     });
 
     describe("get()", function() {
@@ -550,7 +572,7 @@ describe("git", function() {
       }));
 
     });
-    
+
     describe("exists", function() {
 
       it("should return whether the branch exists", sinon.test(function() {
