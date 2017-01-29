@@ -328,7 +328,7 @@ describe("gerrit", function() {
 
       this.stub(gerrit, "installHook").resolves(null);
 
-      return gerrit.clone("gerrit", "project", "destination").then(function() {
+      return gerrit.clone("gerrit", "project", "destination", true).then(function() {
 
         expect(git.show).to.have.been.calledWith(["clone", "--progress", "ssh://user@host:1234/project.git", "destination"]);
 
@@ -352,7 +352,7 @@ describe("gerrit", function() {
 
       this.stub(gerrit, "installHook").resolves(null);
 
-      return gerrit.clone("gerrit", "project").then(function() {
+      return gerrit.clone("gerrit", "project", null, true).then(function() {
 
         expect(git.show).to.have.been.calledWith(["clone", "--progress", "ssh://user@host:1234/project.git", "project"]);
 
@@ -364,6 +364,51 @@ describe("gerrit", function() {
 
       });
 
+    }));
+
+  });
+
+  describe("addRemote()", function() {
+
+    testRequirements(["inRepo"], gerrit.addRemote);
+
+    it("should add the remote", sinon.test(function() {
+
+      this.stub(gerrit, "config").resolves({
+        user: "user",
+        host: "host",
+        port: "1234"
+      });
+
+      this.stub(git, "exec").returns(null);
+
+      return gerrit.addRemote("remote", "config", "project", false)
+        .then(function() {
+
+          expect(git.exec).to.have.been.calledWith("remote add '%s' '%s'", "remote",  "ssh://user@host:1234/project.git");
+
+        });
+
+    }));
+
+    it("should install the hook if asked", sinon.test(function() {
+
+      this.stub(gerrit, "config").resolves({
+        user: "user",
+        host: "host",
+        port: "1234"
+      });
+
+      this.stub(git, "exec").returns(null);
+
+      this.stub(gerrit, "installHook").resolves(null);
+
+      return gerrit.addRemote("remote", "config", "project", true)
+        .then(function() {
+
+          expect(gerrit.installHook).to.have.been.calledWith("remote");
+
+        });
     }));
 
   });

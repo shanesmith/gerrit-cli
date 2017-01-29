@@ -95,6 +95,18 @@ describe("cli", function() {
 
       }));
 
+    },
+
+    "configExists": function(fn) {
+
+      it("should throw if the config doesn't exits", sinon.test(function() {
+
+        gerrit.configExists.resolves(false);
+
+        return expect(fn()).to.be.rejectedWith(cli.CliError);
+
+      }));
+
     }
 
   };
@@ -121,6 +133,8 @@ describe("cli", function() {
     sandbox.stub(git.branch, "upstream").returns("upstream");
 
     sandbox.stub(git.branch, "isRemote").returns(true);
+
+    sandbox.stub(gerrit, "configExists").resolves(true);
 
     openSpy.reset();
 
@@ -160,8 +174,6 @@ describe("cli", function() {
 
     it("should display named config", sinon.test(function() {
 
-      this.stub(gerrit, "configExists").resolves(true);
-
       this.stub(gerrit, "config").resolves({
         name: "foo",
         host: "host",
@@ -187,8 +199,6 @@ describe("cli", function() {
     }));
 
     it("should display default config if none named", sinon.test(function() {
-
-      this.stub(gerrit, "configExists").resolves(true);
 
       this.stub(gerrit, "config").resolves({
         name: "foo",
@@ -245,7 +255,7 @@ describe("cli", function() {
 
     it("should prompt if creating a new config", sinon.test(function() {
 
-      this.stub(gerrit, "configExists").resolves(false);
+      gerrit.configExists.resolves(false);
 
       this.stub(prompter, "prompt").resolves({
         host: "host",
@@ -288,8 +298,6 @@ describe("cli", function() {
     }));
 
     it("should prompt to edit an existing config", sinon.test(function() {
-
-      this.stub(gerrit, "configExists").resolves(true);
 
       this.stub(gerrit, "config").resolves({
         name: "foo",
@@ -339,19 +347,9 @@ describe("cli", function() {
 
   describe("projects()", function() {
 
-    it("should reject if the config doesn't exist", sinon.test(function() {
-
-      this.stub(gerrit, "configExists").resolves(false);
-
-      var promise = cli.projects({});
-
-      return expect(promise).to.be.rejectedWith(cli.CliError);
-
-    }));
+    testRequirements(["configExists"], cli.projects.bind(cli, {}));
 
     it("should use 'default' as the config name if none specified", sinon.test(function() {
-
-      this.stub(gerrit, "configExists").resolves(true);
 
       this.stub(gerrit, "projects").resolves(["foo"]);
 
@@ -372,8 +370,6 @@ describe("cli", function() {
 
       var projects = ["foo", "bar", "xyzzy"];
 
-      this.stub(gerrit, "configExists").resolves(true);
-
       this.stub(gerrit, "projects").resolves(projects);
 
       return cli.projects({config: configName})
@@ -393,9 +389,9 @@ describe("cli", function() {
 
   describe("clone()", function() {
 
-    it("should use 'default' as the config name if none specified", sinon.test(function() {
+    testRequirements(["configExists"], cli.clone.bind(cli, null, null, {}));
 
-      this.stub(gerrit, "configExists").resolves(true);
+    it("should use 'default' as the config name if none specified", sinon.test(function() {
 
       this.stub(gerrit, "clone").resolves(null);
 
@@ -410,19 +406,7 @@ describe("cli", function() {
 
     }));
 
-    it("should reject if the config doesn't exist", sinon.test(function() {
-
-      this.stub(gerrit, "configExists").resolves(false);
-
-      var promise = cli.clone(null, null, {});
-
-      return expect(promise).to.be.rejectedWith(cli.CliError);
-
-    }));
-
     it("should clone", sinon.test(function() {
-
-      this.stub(gerrit, "configExists").resolves(true);
 
       this.stub(gerrit, "clone").resolves(null);
 
@@ -449,8 +433,6 @@ describe("cli", function() {
 
       var configName = "config";
 
-      this.stub(gerrit, "configExists").resolves(true);
-
       this.stub(gerrit, "projects").resolves(projects);
 
       this.stub(gerrit, "clone").resolves(null);
@@ -473,6 +455,61 @@ describe("cli", function() {
           expect(fs.existsSync).to.have.been.calledWith(destinationName);
 
           expect(gerrit.clone).to.have.been.calledWith(configName, projectName, destinationName);
+
+        });
+
+    }));
+
+  });
+
+  describe("addRemote()", function() {
+
+    testRequirements(["inRepo", "configExists"], cli.addRemote.bind(cli, null, null, {}));
+
+    it("should add the remote", sinon.test(function() {
+
+      this.stub(gerrit, "addRemote").returns(null);
+
+      return cli.addRemote("remote", "project", {config: "config", installHook: false})
+        .then(function() {
+
+          expect(gerrit.addRemote).to.have.been.calledWith("remote", "config", "project", false);
+
+        });
+
+    }));
+
+    it("should prompt if a project was not provided", sinon.test(function() {
+
+      this.stub(gerrit, "addRemote").returns(null);
+
+      this.stub(gerrit, "projects").resolves(["projectA", "projectB"]);
+
+      this.stub(prompter, "choose").resolves("projectB");
+
+      return cli.addRemote("remote", null, {config: "config", installHook: true})
+        .then(function() {
+
+          expect(gerrit.addRemote).to.have.been.calledWith("remote", "config", "projectB", true);
+
+        });
+
+    }));
+
+  });
+
+  describe("installHook()", function() {
+
+    testRequirements(["inRepo"], cli.installHook);
+
+    it("should install the hook", sinon.test(function() {
+
+      this.stub(gerrit, "installHook").resolves(null);
+
+      return cli.installHook("remote")
+        .then(function() {
+
+          expect(gerrit.installHook).to.have.been.calledWith("remote");
 
         });
 

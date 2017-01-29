@@ -1,6 +1,6 @@
 #!/bin/bash
 
-__GERRIT_COMMANDS="help config projects clone patches status up draft assign checkout recheckout ssh review submit abandon comment ninja web completion topic squad team"
+__GERRIT_COMMANDS="help config projects clone patches status up draft assign checkout recheckout ssh review submit abandon comment ninja web completion topic squad team add-remote install-hook"
 
 __gerrit_array_index() {
   # $1 is needle

@@ -83,11 +83,29 @@ program.command("projects")
 
 program.command("clone [project_name] [destination_folder]")
   .option("-c, --config <config_name>", "Specify a server config if other than 'default'.")
+  .option("--no-hook", "Skip installing the commit message hook.")
   .description([
     "Clone a project from server.",
     "Clones a project from the Gerrit server and installs the commit-msg hook. All parameters are optional and will be prompted if not specified."
   ])
   .action(cli.clone);
+
+// TODO default remote_name or "origin", or ask if not provided?
+program.command("add-remote <remote_name> [project_name]")
+  .option("-c, --config <config_name>", "Specify a server config if other than 'default'.")
+  .option("--install-hook", "Also install the commit message hook.")
+  .description([
+    "Add project remote for existing repository.",
+    "Add project remote for existing repository."
+  ])
+  .action(cli.addRemote);
+
+program.command("install-hook [remote_name]")
+  .description([
+    "Installs the commit message hook.",
+    "Installs the commit message hook from the given remote, or 'origin' if none provided."
+  ])
+  .action(cli.installHook);
 
 var patchesCmd = program.command("patches")
   .alias("patch")
