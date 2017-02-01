@@ -439,7 +439,7 @@ describe("cli", function() {
 
       this.stub(fs, "existsSync").returns(false);
 
-      this.stub(prompter, "choose").resolves(projectName);
+      this.stub(prompter, "autocomplete").resolves(projectName);
 
       this.stub(prompter, "input").resolves(destinationName);
 
@@ -448,7 +448,7 @@ describe("cli", function() {
 
           expect(gerrit.projects).to.have.been.calledWith(configName);
 
-          expect(prompter.choose).to.have.been.calledWith("Clone which project?", projects);
+          expect(prompter.autocomplete).to.have.been.calledWith("Clone which project?", projects);
 
           expect(prompter.input).to.have.been.calledWith("Clone to which folder?", projectName);
 
@@ -485,7 +485,7 @@ describe("cli", function() {
 
       this.stub(gerrit, "projects").resolves(["projectA", "projectB"]);
 
-      this.stub(prompter, "choose").resolves("projectB");
+      this.stub(prompter, "autocomplete").resolves("projectB");
 
       return cli.addRemote("remote", null, {config: "config", installHook: true})
         .then(function() {
