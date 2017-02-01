@@ -517,7 +517,7 @@ describe("cli", function() {
 
   });
 
-  describe("_patches_map", function() {
+  describe("tokens", function() {
 
     var patchList = helpers.fixture.loadJson("patches");
     var patchObj = patchList[0];
@@ -548,7 +548,7 @@ describe("cli", function() {
       "m": "1.commitMessage"
     };
 
-    _.forEach(cli._patches_map, function(definition, key) {
+    _.forEach(cli.patches.tokens, function(definition, key) {
 
       it("should contain valid format map definition for: " + definition[0], function() {
 
@@ -584,7 +584,7 @@ describe("cli", function() {
               break;
 
             case "R":
-              expect(defFunction({patchSets: [{}]})).to.be.equal("0 / 0");
+              expect(defFunction({patchSets: [{}]})).to.be.equal(" 0 /  0");
               break;
           }
 

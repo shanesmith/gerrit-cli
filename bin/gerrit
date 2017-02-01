@@ -115,7 +115,7 @@ var patchesCmd = program.command("patches")
     "List details of patches on the server for the current project. Many options are available to filter and format the output. Filter options are accumulative. Each filter can be negated by prepending 'not', for example: --not-owner jsmith",
     {
       "Format": "The format is a string of tokens used to decide what fields to display. For example, `gerrit patches --format '%n %O %s'` would display a table (ie: the default display) with columns for the patch number, owner and subject in that order.\n\nThe default format string is '" + cli.patches.defaultFormat + "'.\n\nSee below for the list of possible tokens:\n\n" +
-         _.map(cli._patches_map, function(map, token) { return "%" + token + ": " + map[0]; }).join("\n")
+         _.map(cli.patches.tokens, function(map, token) { return _.padEnd("%" + token + ":", 5) + map[0]; }).join("\n")
     }
   ])
   .option("--number <number>", "Filter by patch number.").option("--not-number <number>")
