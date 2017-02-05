@@ -138,7 +138,7 @@ describe("gerrit_ssh", function() {
         return gerrit_ssh.query.number(1234, config)
           .then(function() {
 
-            expect(gerrit_ssh.query).to.have.been.calledWith(["%s project:%s limit:1", 1234, "project"], config);
+            expect(gerrit_ssh.query).to.have.been.calledWith(["change:%s project:%s limit:1", 1234, "project"], config);
 
           });
 
