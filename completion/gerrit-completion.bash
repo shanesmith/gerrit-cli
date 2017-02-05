@@ -72,6 +72,10 @@ __gerrit_get_squads() {
   git config --get-regex "^gerrit-squad\." | awk -F. '{print "@" $2}' | uniq
 }
 
+__gerrit_get_remotes() {
+  git remote
+}
+
 __gerrit_get_assign_list() {
 
   local all_names="$(__gerrit_get_reviewers)"
@@ -121,6 +125,10 @@ __gerrit_completion() {
     if [[ "$current_word" =~ ^-- ]]; then
 
       word_list="$(__gerrit_get_options "$current_command")"
+
+    elif [[ "$previous_word" = "--remote" ]]; then
+
+      word_list="$(__gerrit_get_remotes)"
 
     else
 
