@@ -4,7 +4,10 @@
   "description": "Gerrit in your command lines.",
   "keywords": [
     "gerrit",
-    "git"
+    "git",
+    "gerrit-cli",
+    "cli",
+    "code-review"
   ],
   "license": "MIT",
   "author": "Shane Smith <shane.wm.smith@gmail.com> (http://shane.smudel.ca)",
