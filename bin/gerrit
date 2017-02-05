@@ -100,11 +100,12 @@ program.command("add-remote <remote_name> [project_name]")
   ])
   .action(cli.addRemote);
 
-program.command("install-hook [remote_name]")
+program.command("install-hook")
   .description([
     "Installs the commit message hook.",
     "Installs the commit message hook from the given remote, or 'origin' if none provided."
   ])
+  .option("-r, --remote <remote>", "Specify a remote.")
   .action(cli.installHook);
 
 var patchesCmd = program.command("patches")
