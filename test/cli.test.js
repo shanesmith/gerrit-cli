@@ -506,7 +506,7 @@ describe("cli", function() {
 
       this.stub(gerrit, "installHook").resolves(null);
 
-      return cli.installHook("remote")
+      return cli.installHook({remote: "remote"})
         .then(function() {
 
           expect(gerrit.installHook).to.have.been.calledWith("remote");
