@@ -1249,12 +1249,12 @@ describe("cli", function() {
 
       this.stub(gerrit, "checkout").resolves(null);
 
-      this.stub(git, "hashFor").returns("123abc");
+      this.stub(git, "getChangeId").returns("123abc");
 
       return cli.recheckout({remote: "remote"})
         .then(function() {
 
-          expect(git.hashFor).to.have.been.calledWith("HEAD");
+          expect(git.getChangeId).to.have.been.calledWith("HEAD");
 
           expect(gerrit.checkout).to.have.been.calledWith("123abc", null, true, "remote");
 
