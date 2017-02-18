@@ -34,16 +34,23 @@ function wrap(text, options) {
 
 program.version(packagejson.version);
 
-program.option("--verbose", "Verbose output");
-
 program.on("*", function(args) {
   logger.error(util.format("Command \"%s\" does not exist.", args[0]));
   program.help();
   process.exit(1);
 });
 
+program.option("--loglevel <loglevel>", "Set log level.");
+program.on("loglevel", cli.setLogLevel);
+
+program.option("--verbose", "Verbose output.");
 program.on("verbose", function() {
-  logger.enableDebug(true);
+  cli.setLogLevel("verbose");
+});
+
+program.option("--debug", "Debug output.");
+program.on("debug", function() {
+  cli.setLogLevel("debug");
 });
 
 program.command("help [command]")
@@ -556,25 +563,36 @@ program.Command.prototype.helpInformation = function() {
 
 /* Logging and Error Handling **/
 
-logger.on("info", logProcess(function(line) {
+createLogOutput("info", function(line) {
   console.log(line);
-}));
+});
 
-logger.on("warn", logProcess(function(line) {
+createLogOutput("warn", function(line) {
   console.warn("gerrit " + chalk.yellow("WARN") + " " + line);
-}));
+});
 
-logger.on("error", logProcess(function(line) {
+createLogOutput("error", function(line) {
   console.error("gerrit " + chalk.red("ERROR") + " " + line);
-}));
+});
 
-logger.on("debug", logProcess(function(line) {
-  console.log("gerrit " + chalk.cyan("DEBUG") + " " + line);
-}));
+createLogOutput("verbose", function(line) {
+  console.log("gerrit " + chalk.cyan("VERB") + " " + line);
+});
 
-function logProcess(lineOutputCallback) {
-  return function(message, context) {
+createLogOutput("debug", function(line) {
+  console.log("gerrit " + chalk.green("DEBUG") + " " + line);
+});
+
+function createLogOutput(loglevel, lineOutputCallback) {
+  var loglevel_index = logger.LEVELS.indexOf(loglevel);
+
+  logger.on(loglevel, function(message, context) {
+    if (loglevel_index > logger.LEVELS.indexOf(cli.loglevel)) {
+      return;
+    }
+
     message = message.split("\n");
+
     if (context) {
       for (var key in context) {
         var value = context[key];
@@ -584,8 +602,9 @@ function logProcess(lineOutputCallback) {
         message.push("  " + chalk.magenta(key + ":") + " " + value);
       }
     }
+
     message.forEach(lineOutputCallback);
-  };
+  });
 }
 
 Q.onPossiblyUnhandledRejection(function(e, promise) {
