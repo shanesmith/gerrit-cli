@@ -1,6 +1,6 @@
 #!/bin/bash
 
-__GERRIT_COMMANDS="help config projects clone patches status up draft assign checkout recheckout ssh review submit abandon comment ninja web completion topic squad team add-remote install-hook"
+__GERRIT_COMMANDS="help config projects clone patches status up draft assign checkout recheckout ssh review submit abandon comment ninja web completion topic clean squad team add-remote install-hook"
 
 __GERRIT_ALIASES="pa patch st co reco tp"
 
@@ -49,6 +49,7 @@ __gerrit_get_options() {
     draft)                  echo "--remote --branch --comment --assign" ;;
     checkout|co)            echo "--remote" ;;
     recheckout|reco)        echo "--remote" ;;
+    clean)                  echo "--age" ;;
     ssh)                    echo "--remote" ;;
     review)                 echo "--interactive --remote" ;;
     submit|abandon|comment) echo "--all --interactive --remote" ;;

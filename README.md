@@ -66,6 +66,7 @@ ninja           Push patch to server then immediately submit for merging.
 web             Open browser to gerrit web page for current patch.
 completion      Enables tab completion for gerrit-cli.
 topic           Create new topic branch.
+clean           Cleans out merged topic branches.
 squad           Manage squads of reviewers.
 ```
 

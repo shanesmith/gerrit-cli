@@ -904,6 +904,52 @@ describe("gerrit", function() {
 
   });
 
+  describe("mergedTopics()", function() {
+
+    it("should return fullly merged topics", sinon.test(function() {
+
+      this.stub(git.branch, "list").returns([
+        "master",
+        "upstream",
+        "no-upstream",
+        "diff-upstream",
+        "empty",
+        "not-submitted",
+        "submitted"
+      ]);
+
+      this.stub(git.branch, "hasUpstream", function(branch) {
+        return branch !== "no-upstream";
+      });
+
+      this.stub(git.branch, "upstream", function(branch) {
+        return branch === "diff-upstream" ? "origin/QQ" : "origin/upstream";
+      });
+
+      this.stub(git, "revList", function(branch) {
+        return branch === "empty" ? [] : [branch+"1", branch+"2"];
+      });
+
+      this.stub(git, "hashFor", function(val) {
+        if (val !== "empty") {
+          sinon.assert.fail("hasFor should only be called for empty");
+        }
+        return val + "1";
+      });
+
+      this.stub(git, "getChangeId", function(commit) {
+        return commit + "I";
+      });
+
+      this.stub(git, "exec", function(command, changeId) {
+        return changeId === "not-submitted1I" ? "" : changeId + "R";
+      });
+
+      expect(gerrit.mergedTopics("origin/upstream")).to.deep.equal(["empty", "submitted"]);
+    }));
+
+  });
+
   describe("squad", function() {
 
     describe("get()", function() {

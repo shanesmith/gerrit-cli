@@ -353,6 +353,14 @@ program.command("topic <name> [upstream]")
   ])
   .action(cli.topic);
 
+program.command("clean")
+  .option("--age <age>", "Remove topics merged older than this, formatted: 2w3d5h")
+  .description([
+    "Cleans out merged topic branches.",
+    "Cleans out topic branches by searching for Change-IDs in the upstream branch."
+  ])
+  .action(cli.clean);
+
 var squadCmd = program.command("squad")
   .alias("team")
   .description([

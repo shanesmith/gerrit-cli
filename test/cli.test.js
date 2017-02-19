@@ -1558,6 +1558,43 @@ describe("cli", function() {
 
   });
 
+  describe("clean()", function() {
+
+    testRequirements(["inRepo"], cli.clean);
+
+    sandboxEach(function(sandbox) {
+      git.branch.upstream.returns("origin/upstream");
+
+      sandbox.stub(gerrit, "mergedTopics").returns(["AA", "BB"]);
+
+      sandbox.stub(prompter, "confirm").resolves(true);
+
+      sandbox.stub(git, "show");
+    });
+
+    it("should do nothing if there's nothing to clean", sinon.test(function() {
+
+      gerrit.mergedTopics.returns([]);
+
+      cli.clean({});
+
+      expect(git.show).to.not.have.been.called;
+
+    }));
+
+    it("should remove merged topics", sinon.test(function() {
+
+      cli.clean({})
+        .then(function() {
+
+          expect(git.show).to.have.been.calledWith(["branch", "-D", "--", "AA", "BB"]);
+
+        });
+
+    }));
+
+  });
+
   describe("squad", function() {
 
     describe("list()", function() {

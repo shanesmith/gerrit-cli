@@ -693,6 +693,18 @@ describe("git", function() {
 
     });
 
+    describe("list", function() {
+
+      it("shoud return the list of branches", sinon.test(function() {
+
+        this.stub(git, "exec").withArgs("for-each-ref --format='%(refname:short)' refs/heads/").returns("A\nB\nC");
+
+        expect(git.branch.list()).to.equal(["A", "B", "C"]);
+
+      }));
+
+    });
+
 
   });
 
