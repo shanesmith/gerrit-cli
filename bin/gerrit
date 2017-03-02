@@ -168,7 +168,7 @@ program.command("status [what]")
   ])
   .action(cli.status);
 
-program.command("assign")
+program.command("assign [reviewers...]")
   .description([
     "Assign reviewers to the current patch.",
     "Assign reviewers to the current patch. If there are multiple commits in the topic you will need to either assign the reviewers to all of them (--all) or to choose which to assign to (--interactive).\n\nThe list of reviewers to assign can include squads, which should be prefixed with an @-symbol, for example \"@ATeam\". See `gerrit help squads` for more information on managing squads."
@@ -176,11 +176,7 @@ program.command("assign")
   .option("-a, --all", "Assign reviewers to all patches in the current topic.")
   .option("-i, --interactive", "Start interactive reviewer assigning to specify which patches in current topic.")
   .option("-r, --remote <remote>", "Specify a remote.")
-  .action(function() {
-    var reviewers = program.args.slice(0, -1);
-    var options = arguments[arguments.length-1];
-    cli.assign(reviewers, options);
-  });
+  .action(cli.assign);
 
 program.command("up")
   .description([
