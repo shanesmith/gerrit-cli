@@ -350,7 +350,9 @@ program.command("topic <name> [upstream]")
   .action(cli.topic);
 
 program.command("clean")
-  .option("--age <age>", "Remove topics merged older than this, formatted: 2w3d5h")
+  .option("--age <age>", "Remove topic branches merged older than this, formatted: 2w3d5h")
+  .option("-n, --dry-run", "Only show which branches would be removed")
+  .option("-f, --force", "Don't ask for confirmation before removing branchs")
   .description([
     "Cleans out merged topic branches.",
     "Cleans out topic branches by searching for Change-IDs in the upstream branch."
