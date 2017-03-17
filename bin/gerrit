@@ -637,8 +637,14 @@ domain.on("error", function(err) {
     logger.error(err.message);
   }
   else {
-    logger.error(chalk.bgRed("UNKNOWN") + " " + err.toString(), err);
-    logger.error(err.stack.substr(err.stack.indexOf("\n") + 1));
+    var context = {};
+    if (!_.isString(err)) {
+      context = err;
+    }
+    logger.error(chalk.bgRed("UNKNOWN") + " " + err.toString(), context);
+    if (err.stack) {
+      logger.error(err.stack.substr(err.stack.indexOf("\n") + 1));
+    }
   }
   process.exit(1);
 });
