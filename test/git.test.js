@@ -5,7 +5,7 @@ var sandboxEach = helpers.sandboxEach;
 
 var _ = require("lodash");
 var fs = require("fs");
-var child_process = require("child_process");
+var spawn = require("cross-spawn");
 var mock_spawn = require("mock-spawn");
 
 var git = require("../lib/git");
@@ -32,7 +32,7 @@ describe("git", function() {
 
     sandboxEach(function(sandbox) {
 
-      sandbox.stub(child_process, "execSync").returns("output\n");
+      sandbox.stub(spawn, "sync").returns({status: 0, stdout: "output\n", stderr: "error\n"});
 
     });
 
@@ -40,7 +40,7 @@ describe("git", function() {
 
       var output = git.exec("command");
 
-      expect(child_process.execSync).to.have.been.calledWith("git command");
+      expect(spawn.sync).to.have.been.calledWith("git", ["command"]);
 
       // without trailing newline
       expect(output).to.equal("output");
@@ -49,16 +49,22 @@ describe("git", function() {
 
     it("should format command as arguments", sinon.test(function() {
 
-      git.exec("command %s", "flag");
+      git.exec("command", "one");
+      git.exec("command", ["two", "two"]);
+      git.exec(["command", "three"]);
+      git.exec(["command", ["four", "four"]]);
 
-      expect(child_process.execSync).to.have.been.calledWith("git command flag");
+      expect(spawn.sync).to.have.been.calledWith("git", ["command", "one"]);
+      expect(spawn.sync).to.have.been.calledWith("git", ["command", "two", "two"]);
+      expect(spawn.sync).to.have.been.calledWith("git", ["command", "three"]);
+      expect(spawn.sync).to.have.been.calledWith("git", ["command", "four", "four"]);
 
     }));
 
     it("should throw an error if the command fails", sinon.test(function() {
 
-      child_process.execSync.throws({
-        status: "status",
+      spawn.sync.returns({
+        status: 1,
         stdout: "stdout\n",
         stderr: "stderr\n"
       });
@@ -73,7 +79,7 @@ describe("git", function() {
 
     it("should return true if the command succeeds", sinon.test(function() {
 
-      this.stub(git, "exec").returns("output");
+      this.stub(git, "run").returns({status: 0});
 
       expect(git.execSuccess("command")).to.be.true;
 
@@ -81,7 +87,7 @@ describe("git", function() {
 
     it("should return false if the command fails", sinon.test(function() {
 
-      this.stub(git, "exec").throws("error");
+      this.stub(git, "run").returns({status: 1});
 
       expect(git.execSuccess("command")).to.be.false;
 
@@ -95,7 +101,7 @@ describe("git", function() {
 
     sandboxEach(function(sandbox) {
       spawn = mock_spawn();
-      sandbox.stub(child_process, "spawn", spawn);
+      sandbox.stub(spawn, "spawn", spawn);
     });
 
     it("should show the runing command");
@@ -106,7 +112,7 @@ describe("git", function() {
 
     it("should return whether the current directory is a repositoru", sinon.test(function() {
 
-      this.stub(git, "execSuccess").withArgs("rev-parse --git-dir").returns(true);
+      this.stub(git, "execSuccess").withArgs("rev-parse", "--git-dir").returns(true);
 
       expect(git.inRepo()).to.be.true;
 
@@ -118,7 +124,7 @@ describe("git", function() {
 
     it("should return the git repository directory", sinon.test(function() {
 
-      this.stub(git, "exec").withArgs("rev-parse --git-dir").returns("/path/to/dir");
+      this.stub(git, "exec").withArgs("rev-parse", "--git-dir").returns("/path/to/dir");
 
       expect(git.dir()).to.equal("/path/to/dir");
 
@@ -167,7 +173,7 @@ describe("git", function() {
 
     it("should return whether the index is clean", sinon.test(function() {
 
-      this.stub(git, "execSuccess").withArgs("diff-index --no-ext-diff --quiet --exit-code HEAD").returns(true);
+      this.stub(git, "execSuccess").withArgs("diff-index", "--no-ext-diff", "--quiet", "--exit-code", "HEAD").returns(true);
 
       expect(git.isIndexClean()).to.be.true;
 
@@ -179,7 +185,7 @@ describe("git", function() {
 
     it("should return the hash for the provided reference", sinon.test(function() {
 
-      this.stub(git, "exec").withArgs("rev-list --max-count=1 '%s'", "ref").returns("hash");
+      this.stub(git, "exec").withArgs("rev-list", "--max-count=1", "ref").returns("hash");
 
       expect(git.hashFor("ref")).to.equal("hash");
 
@@ -191,7 +197,7 @@ describe("git", function() {
 
     it("should return a list of revisions", sinon.test(function() {
 
-      this.stub(git, "exec").withArgs("rev-list '%s' '^%s'", "target", "excludeTarget").returns("one\ntwo\nthree");
+      this.stub(git, "exec").withArgs("rev-list", "target", "^excludeTarget").returns("one\ntwo\nthree");
 
       expect(git.revList("target", "excludeTarget")).to.deep.equal(["one", "two", "three"]);
 
@@ -203,7 +209,7 @@ describe("git", function() {
 
     it("should return a decription of the hash", sinon.test(function() {
 
-      this.stub(git, "exec").withArgs("show --no-patch --format='%s' %s", "%h %s", "hash").returns("description");
+      this.stub(git, "exec").withArgs("show", "--no-patch", "--format=%h %s", "hash").returns("description");
 
       expect(git.describeHash("hash")).to.be.equal("description");
 
@@ -215,7 +221,7 @@ describe("git", function() {
 
     it("should return commit info", sinon.test(function() {
 
-      this.stub(git, "exec").withArgs("show --no-patch --format='%s' %s", "format", "hash").returns("info");
+      this.stub(git, "exec").withArgs("show", "--no-patch", "--format=format", "hash").returns("info");
 
       expect(git.commitInfo("hash", "format")).to.be.equal("info");
 
@@ -226,7 +232,7 @@ describe("git", function() {
   describe("getChangeId", function() {
     it("should return the commit's ChangeId", sinon.test(function() {
 
-      this.stub(git, "exec").withArgs("show --no-patch --format='%s' %s", "%b", "hash").returns("blah blah\nChange-Id: Iabc123\nblah blah");
+      this.stub(git, "exec").withArgs("show", "--no-patch", "--format=%b", "hash").returns("blah blah\nChange-Id: Iabc123\nblah blah");
 
       expect(git.getChangeId("hash")).to.equal("Iabc123");
 
@@ -296,7 +302,7 @@ describe("git", function() {
 
       it("should get the config", sinon.test(function() {
 
-        this.stub(git, "exec").withArgs("config %s '%s'", "", "key").returns("value");
+        this.stub(git, "exec").withArgs("config", [], "key").returns("value");
 
         expect(git.config.get("key")).to.equals("value");
 
@@ -304,7 +310,7 @@ describe("git", function() {
 
       it("should get the local config if local option is set", sinon.test(function() {
 
-        this.stub(git, "exec").withArgs("config %s '%s'", "--local", "key").returns("value");
+        this.stub(git, "exec").withArgs("config", ["--local"], "key").returns("value");
 
         expect(git.config.get("key", {local: true})).to.equal("value");
 
@@ -312,7 +318,7 @@ describe("git", function() {
 
       it("should get the global config if options is set", sinon.test(function() {
 
-        this.stub(git, "exec").withArgs("config %s '%s'", "--global", "key").returns("value");
+        this.stub(git, "exec").withArgs("config", ["--global"], "key").returns("value");
 
         expect(git.config.get("key", {global: true})).to.equal("value");
 
@@ -320,7 +326,7 @@ describe("git", function() {
 
       it("should get all config values if the all option is set", sinon.test(function() {
 
-        this.stub(git, "exec").withArgs("config %s '%s'", "--get-all", "key").returns("one\ntwo\nthree");
+        this.stub(git, "exec").withArgs("config", ["--get-all"], "key").returns("one\ntwo\nthree");
 
         expect(git.config.get("key", {all: true})).to.deep.equal(["one", "two", "three"]);
 
@@ -328,7 +334,7 @@ describe("git", function() {
 
       it("should get matching config values if the regex flag is set", sinon.test(function() {
 
-        this.stub(git, "exec").withArgs("config %s '%s'", "--get-regexp", "key").returns("k-one v-one\nk-two v-two\nk-two v-three");
+        this.stub(git, "exec").withArgs("config", ["--get-regexp"], "key").returns("k-one v-one\nk-two v-two\nk-two v-three");
 
         expect(git.config.get("key", {regex: true})).to.deep.equal({
           "k-one": ["v-one"],
@@ -339,7 +345,7 @@ describe("git", function() {
 
       it("should return null if there are no config values", sinon.test(function() {
 
-        this.stub(git, "exec").withArgs("config %s '%s'", "", "key").throws("error");
+        this.stub(git, "exec").withArgs("config", [], "key").throws("error");
 
         expect(git.config.get("key")).to.be.null;
 
@@ -347,7 +353,7 @@ describe("git", function() {
 
       it("should return an empty array if there are no config values and the all flag is set", sinon.test(function() {
 
-        this.stub(git, "exec").withArgs("config %s '%s'", "--get-all", "key").throws("error");
+        this.stub(git, "exec").withArgs("config", ["--get-all"], "key").throws("error");
 
         expect(git.config.get("key", {all: true})).to.deep.equal([]);
 
@@ -355,7 +361,7 @@ describe("git", function() {
 
       it("should return an empty array if there are no config values and the regex flag is set", sinon.test(function() {
 
-        this.stub(git, "exec").withArgs("config %s '%s'", "--get-regexp", "key").throws("error");
+        this.stub(git, "exec").withArgs("config", ["--get-regexp"], "key").throws("error");
 
         expect(git.config.get("key", {regex: true})).to.deep.equal([]);
 
@@ -376,7 +382,7 @@ describe("git", function() {
 
         expect(git.config.unset).to.have.been.calledWith("key");
 
-        expect(git.exec).to.have.been.calledWith("config %s '%s' '%s'", "--add", "key", "value");
+        expect(git.exec).to.have.been.calledWith("config", ["--add"], "key", "value");
 
       }));
 
@@ -387,8 +393,8 @@ describe("git", function() {
         expect(git.config.unset).to.have.been.calledWith("key");
 
         expect(git.exec).to.have
-          .been.calledWith("config %s '%s' '%s'", "--add", "key", "one")
-          .and.calledWith("config %s '%s' '%s'", "--add", "key", "two");
+          .been.calledWith("config", ["--add"], "key", "one")
+          .and.calledWith("config", ["--add"], "key", "two");
 
       }));
 
@@ -398,7 +404,7 @@ describe("git", function() {
 
         expect(git.config.unset).to.have.been.calledWith("key", sinon.match({local: true}));
 
-        expect(git.exec).to.have.been.calledWith("config %s '%s' '%s'", "--local --add", "key", "value");
+        expect(git.exec).to.have.been.calledWith("config", ["--local", "--add"], "key", "value");
 
       }));
 
@@ -408,7 +414,7 @@ describe("git", function() {
 
         expect(git.config.unset).to.have.been.calledWith("key", sinon.match({global: true}));
 
-        expect(git.exec).to.have.been.calledWith("config %s '%s' '%s'", "--global --add", "key", "value");
+        expect(git.exec).to.have.been.calledWith("config", ["--global", "--add"], "key", "value");
 
       }));
 
@@ -418,7 +424,7 @@ describe("git", function() {
 
         expect(git.config.unset).to.have.not.been.called;
 
-        expect(git.exec).to.have.been.calledWith("config %s '%s' '%s'", "--add", "key", "value");
+        expect(git.exec).to.have.been.calledWith("config", ["--add"], "key", "value");
 
       }));
 
@@ -431,10 +437,10 @@ describe("git", function() {
         expect(git.config.unset).to.have.not.been.called;
 
         expect(git.exec).to.have
-          .been.calledWith("config %s '%s' '%s'", "--add", "key", "a")
-          .and.calledWith("config %s '%s' '%s'", "--add", "key", "d")
-          .and.not.calledWith("config %s '%s' '%s'", "--add", "key", "b")
-          .and.not.calledWith("config %s '%s' '%s'", "--add", "key", "c");
+          .been.calledWith("config", ["--add"], "key", "a")
+          .and.calledWith("config", ["--add"], "key", "d")
+          .and.not.calledWith("config", ["--add"], "key", "b")
+          .and.not.calledWith("config", ["--add"], "key", "c");
 
         expect(values).to.deep.equal(["a", "d"]);
 
@@ -464,7 +470,7 @@ describe("git", function() {
 
         git.config.unset("key");
 
-        expect(git.exec).to.have.been.calledWith("config --unset-all %s '%s'", "", "key");
+        expect(git.exec).to.have.been.calledWith("config", "--unset-all", [], "key");
 
       }));
 
@@ -481,11 +487,11 @@ describe("git", function() {
         var values = git.config.unsetMatching("key", ["b", "c", "q"]);
 
         expect(git.exec).to.have
-          .been.calledWith("config --unset %s '%s' '^%s$'", "", "key", "b")
-          .and.calledWith("config --unset %s '%s' '^%s$'", "", "key", "c")
-          .and.not.calledWith("config --unset %s '%s' '^%s$'", "", "key", "a")
-          .and.not.calledWith("config --unset %s '%s' '^%s$'", "", "key", "d")
-          .and.not.calledWith("config --unset %s '%s' '^%s$'", "", "key", "q");
+          .been.calledWith("config", "--unset", [], "key", "^b$")
+          .and.calledWith("config", "--unset", [], "key", "^c$")
+          .and.not.calledWith("config", "--unset", [], "key", "^a$")
+          .and.not.calledWith("config", "--unset", [], "key", "^d$")
+          .and.not.calledWith("config", "--unset", [], "key", "^q$");
 
         expect(values).to.deep.equal(["b", "c"]);
 
@@ -517,7 +523,7 @@ describe("git", function() {
 
         git.config.removeSection("section");
 
-        expect(git.exec).to.have.been.calledWith("config --remove-section %s '%s'", "", "section");
+        expect(git.exec).to.have.been.calledWith("config", "--remove-section", [], "section");
 
       }));
 
@@ -531,7 +537,7 @@ describe("git", function() {
 
         git.config.renameSection("section", "newsection");
 
-        expect(git.exec).to.have.been.calledWith("config --rename-section %s '%s' '%s'", "", "section", "newsection");
+        expect(git.exec).to.have.been.calledWith("config", "--rename-section", [], "section", "newsection");
 
       }));
 
@@ -557,7 +563,7 @@ describe("git", function() {
 
       it("should return the reference's branch name", sinon.test(function() {
 
-        this.stub(git, "exec").withArgs("symbolic-ref --quiet --short %s", "ref").returns("branch");
+        this.stub(git, "exec").withArgs("symbolic-ref", "--quiet", "--short", "ref").returns("branch");
 
         expect(git.branch.name("ref")).to.equal("branch");
 
@@ -565,7 +571,7 @@ describe("git", function() {
 
       it("should return the HEAD's branch name if no reference is provided", sinon.test(function() {
 
-        this.stub(git, "exec").withArgs("symbolic-ref --quiet --short %s", "HEAD").returns("branch");
+        this.stub(git, "exec").withArgs("symbolic-ref", "--quiet", "--short", "HEAD").returns("branch");
 
         expect(git.branch.name()).to.equal("branch");
 
@@ -577,7 +583,7 @@ describe("git", function() {
 
       it("should return whether the branch exists", sinon.test(function() {
 
-        this.stub(git, "execSuccess").withArgs("show-ref --verify --quiet 'refs/heads/%s'", "branch").returns(true);
+        this.stub(git, "execSuccess").withArgs("show-ref", "--verify", "--quiet", "refs/heads/branch").returns(true);
 
         expect(git.branch.exists("branch")).to.be.true;
 
@@ -593,7 +599,7 @@ describe("git", function() {
 
         git.branch.remove("branch");
 
-        expect(git.exec).to.have.been.calledWith("branch -D '%s'", "branch");
+        expect(git.exec).to.have.been.calledWith("branch", "-D", "branch");
 
       }));
 
@@ -607,7 +613,7 @@ describe("git", function() {
 
         git.branch.create("branch", "start");
 
-        expect(git.exec).to.have.been.calledWith("branch '%s' '%s'", "branch", "start");
+        expect(git.exec).to.have.been.calledWith("branch", "branch", "start");
 
       }));
 
@@ -617,7 +623,7 @@ describe("git", function() {
 
         git.branch.create("branch");
 
-        expect(git.exec).to.have.been.calledWith("branch '%s' '%s'", "branch", "HEAD");
+        expect(git.exec).to.have.been.calledWith("branch", "branch", "HEAD");
 
       }));
 
@@ -627,7 +633,7 @@ describe("git", function() {
 
         git.branch.create("branch", "start", true);
 
-        expect(git.exec).to.have.been.calledWith("checkout -b '%s' '%s'", "branch", "start");
+        expect(git.exec).to.have.been.calledWith("checkout", "-b", "branch", "start");
 
       }));
 
@@ -637,7 +643,7 @@ describe("git", function() {
 
       it("should return whether the branch has an upstream", sinon.test(function() {
 
-        this.stub(git, "execSuccess").withArgs("rev-parse --verify '%s@{u}'", "branch").returns(true);
+        this.stub(git, "execSuccess").withArgs("rev-parse", "--verify", "branch@{u}").returns(true);
 
         expect(git.branch.hasUpstream("branch")).to.be.true;
 
@@ -653,7 +659,7 @@ describe("git", function() {
 
         git.branch.setUpstream("branch", "upstream");
 
-        expect(git.exec).to.have.been.calledWith("branch --set-upstream-to='%s' '%s'", "upstream", "branch");
+        expect(git.exec).to.have.been.calledWith("branch", "--set-upstream-to", "upstream", "branch");
 
       }));
 
@@ -663,7 +669,7 @@ describe("git", function() {
 
       it("should return the upstream", sinon.test(function() {
 
-        this.stub(git, "exec").withArgs("rev-parse --symbolic-full-name --abbrev-ref '%s@{u}'", "branch").returns("upstream");
+        this.stub(git, "exec").withArgs("rev-parse", "--symbolic-full-name", "--abbrev-ref", "branch@{u}").returns("upstream");
 
         expect(git.branch.upstream("branch")).to.equal("upstream");
 
@@ -675,7 +681,7 @@ describe("git", function() {
 
       it("should return whether the branch is remote", sinon.test(function() {
 
-        this.stub(git, "exec").withArgs("rev-parse --verify 'refs/remotes/%s'", "branch").returns(true);
+        this.stub(git, "execSuccess").withArgs("rev-parse", "--verify", "refs/remotes/branch").returns(true);
 
         expect(git.branch.isRemote("branch")).to.be.true;
 
@@ -697,9 +703,9 @@ describe("git", function() {
 
       it("shoud return the list of branches", sinon.test(function() {
 
-        this.stub(git, "exec").withArgs("for-each-ref --format='%(refname:short)' refs/heads/").returns("A\nB\nC");
+        this.stub(git, "exec").withArgs("for-each-ref", "--format=%(refname:short)", "refs/heads/").returns("A\nB\nC");
 
-        expect(git.branch.list()).to.equal(["A", "B", "C"]);
+        expect(git.branch.list()).to.deep.equal(["A", "B", "C"]);
 
       }));
 

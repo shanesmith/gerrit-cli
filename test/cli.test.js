@@ -1587,7 +1587,7 @@ describe("cli", function() {
       cli.clean({})
         .then(function() {
 
-          expect(git.show).to.have.been.calledWith(["branch", "-D", "--", "AA", "BB"]);
+          expect(git.show).to.have.been.calledWith("branch", "-D", "--", "AA", "BB");
 
         });
 

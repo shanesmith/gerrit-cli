@@ -26,6 +26,7 @@
     "chalk": "^1.1.0",
     "cli-table": "^0.3.1",
     "commander": "^2.7.0",
+    "cross-spawn": "^5.1.0",
     "fs-extra": "^1.0.0",
     "inquirer": "^1.2.3",
     "inquirer-autocomplete-prompt": "^0.3.0",

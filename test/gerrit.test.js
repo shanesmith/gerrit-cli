@@ -330,7 +330,7 @@ describe("gerrit", function() {
 
       return gerrit.clone("gerrit", "project", "destination", true).then(function() {
 
-        expect(git.show).to.have.been.calledWith(["clone", "--progress", "ssh://user@host:1234/project.git", "destination"]);
+        expect(git.show).to.have.been.calledWith("clone", "--progress", "ssh://user@host:1234/project.git", "destination");
 
         expect(process.chdir).to.have.been.calledWith("destination");
 
@@ -354,7 +354,7 @@ describe("gerrit", function() {
 
       return gerrit.clone("gerrit", "project", null, true).then(function() {
 
-        expect(git.show).to.have.been.calledWith(["clone", "--progress", "ssh://user@host:1234/project.git", "project"]);
+        expect(git.show).to.have.been.calledWith("clone", "--progress", "ssh://user@host:1234/project.git", "project");
 
         expect(process.chdir).to.have.been.calledWith("project");
 
@@ -385,7 +385,7 @@ describe("gerrit", function() {
       return gerrit.addRemote("remote", "config", "project", false)
         .then(function() {
 
-          expect(git.exec).to.have.been.calledWith("remote add '%s' '%s'", "remote",  "ssh://user@host:1234/project.git");
+          expect(git.exec).to.have.been.calledWith("remote", "add", "remote",  "ssh://user@host:1234/project.git");
 
         });
 
@@ -615,7 +615,7 @@ describe("gerrit", function() {
       return gerrit.up()
         .then(function() {
 
-          expect(git.show).to.have.been.calledWith(["push", "remote-name", "HEAD:refs/for/p-branch/topic"]);
+          expect(git.show).to.have.been.calledWith("push", "remote-name", "HEAD:refs/for/p-branch/topic");
 
         });
 
@@ -626,7 +626,7 @@ describe("gerrit", function() {
       return gerrit.up(null, null, true)
         .then(function() {
 
-          expect(git.show).to.have.been.calledWith(["push", "remote-name", "HEAD:refs/drafts/p-branch/topic"]);
+          expect(git.show).to.have.been.calledWith("push", "remote-name", "HEAD:refs/drafts/p-branch/topic");
 
         });
 
@@ -664,8 +664,8 @@ describe("gerrit", function() {
         .then(function() {
 
           expect(git.exec).to.have
-            .been.calledWith("fetch '%s' '%s'", "remote-name", "refs/changes/34/1234/1")
-            .and.calledWith("checkout FETCH_HEAD");
+            .been.calledWith("fetch", "remote-name", "refs/changes/34/1234/1")
+            .and.calledWith("checkout", "FETCH_HEAD");
 
           expect(git.branch.create).to.have.been.calledWith("topic", "FETCH_HEAD", true);
 
@@ -685,8 +685,8 @@ describe("gerrit", function() {
         .then(function() {
 
           expect(git.exec).to.have
-            .been.calledWith("fetch '%s' '%s'", "remote-name", "refs/changes/21/4321/1")
-            .and.calledWith("checkout FETCH_HEAD");
+            .been.calledWith("fetch", "remote-name", "refs/changes/21/4321/1")
+            .and.calledWith("checkout", "FETCH_HEAD");
 
           expect(git.branch.create).to.have.been.calledWith("topic", "FETCH_HEAD", true);
 
@@ -784,14 +784,14 @@ describe("gerrit", function() {
 
     it("should fetch the latest patch set if none provided", sinon.test(function() {
 
-      git.exec.withArgs("ls-remote '%s' '%s/*'").returns("refs/changes/34/1234/1\nrefs/changes/34/1234/2\nrefs/changes/34/1234/3");
+      git.exec.withArgs("ls-remote").returns("refs/changes/34/1234/1\nrefs/changes/34/1234/2\nrefs/changes/34/1234/3");
 
       return gerrit.checkout("topic", null, false, "remote")
         .then(function() {
 
           expect(git.exec).to.have
-            .been.calledWith("ls-remote '%s' '%s/*'", "remote-name", "refs/changes/34/1234")
-            .and.calledWith("fetch '%s' '%s'", "remote-name", "refs/changes/34/1234/3");
+            .been.calledWith("ls-remote", "remote-name", "refs/changes/34/1234/*")
+            .and.calledWith("fetch", "remote-name", "refs/changes/34/1234/3");
 
         });
 
@@ -941,7 +941,7 @@ describe("gerrit", function() {
         return commit + "I";
       });
 
-      this.stub(git, "exec", function(command, changeId) {
+      this.stub(git, "exec", function(a, b, changeId) {
         return changeId === "not-submitted1I" ? "" : changeId + "R";
       });
 
