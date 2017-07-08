@@ -343,6 +343,7 @@ program.command("completion")
 
 program.command("topic <name> [upstream]")
   .alias("tp")
+  .option("-f, --force", "Force overwriting an existing branch.")
   .description([
     "Create new topic branch.",
     "Create new topic branch tracking the given upstream. If upstream is not specified then it will be set to current branch's upstream."
