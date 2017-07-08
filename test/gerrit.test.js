@@ -648,6 +648,8 @@ describe("gerrit", function() {
 
       sandbox.stub(git, "exec").returns(null);
 
+      sandbox.stub(git, "checkout", _.noop);
+
       sandbox.stub(git.branch, "exists").returns(false);
 
       sandbox.stub(git.branch, "create", _.noop);
@@ -663,11 +665,13 @@ describe("gerrit", function() {
       return gerrit.checkout("topic", 1, false, "remote")
         .then(function() {
 
-          expect(git.exec).to.have
-            .been.calledWith("fetch", "remote-name", "refs/changes/34/1234/1")
-            .and.calledWith("checkout", "FETCH_HEAD");
+          expect(git.exec).to.have.been.calledWith("fetch", "remote-name", "refs/changes/34/1234/1");
 
-          expect(git.branch.create).to.have.been.calledWith("topic", "FETCH_HEAD", true);
+          expect(git.checkout).to.have.been.calledWith("FETCH_HEAD");
+
+          expect(git.branch.create).to.have.been.calledWith("topic", "FETCH_HEAD");
+
+          expect(git.checkout).to.have.been.calledWith("topic");
 
           expect(git.branch.setUpstream).to.have.been.calledWith("topic", "remote-name/branch");
 
@@ -684,11 +688,13 @@ describe("gerrit", function() {
       return gerrit.checkout("4321", 1, false, "remote")
         .then(function() {
 
-          expect(git.exec).to.have
-            .been.calledWith("fetch", "remote-name", "refs/changes/21/4321/1")
-            .and.calledWith("checkout", "FETCH_HEAD");
+          expect(git.exec).to.have.been.calledWith("fetch", "remote-name", "refs/changes/21/4321/1");
 
-          expect(git.branch.create).to.have.been.calledWith("topic", "FETCH_HEAD", true);
+          expect(git.checkout).to.have.been.calledWith("FETCH_HEAD");
+
+          expect(git.branch.create).to.have.been.calledWith("topic", "FETCH_HEAD");
+
+          expect(git.checkout).to.have.been.calledWith("topic");
 
           expect(git.branch.setUpstream).to.have.been.calledWith("topic", "remote-name/branch");
 
@@ -711,7 +717,9 @@ describe("gerrit", function() {
 
             expect(git.branch.remove).to.have.been.calledWith("topic");
 
-            expect(git.branch.create).to.have.been.calledWith("topic", "FETCH_HEAD", true);
+            expect(git.branch.create).to.have.been.calledWith("topic", "FETCH_HEAD");
+
+            expect(git.checkout).to.have.been.calledWith("topic");
 
           });
 
@@ -730,7 +738,9 @@ describe("gerrit", function() {
 
             expect(git.branch.remove).to.not.have.been.calledWith("topic");
 
-            expect(git.branch.create).to.not.have.been.calledWith("topic", "FETCH_HEAD", true);
+            expect(git.branch.create).to.not.have.been.calledWith("topic", "FETCH_HEAD");
+
+            expect(git.checkout).to.not.have.been.calledWith("topic");
 
           });
 
@@ -751,7 +761,9 @@ describe("gerrit", function() {
 
             expect(git.branch.remove).to.have.been.calledWith("topic");
 
-            expect(git.branch.create).to.have.been.calledWith("topic", "FETCH_HEAD", true);
+            expect(git.branch.create).to.have.been.calledWith("topic", "FETCH_HEAD");
+
+            expect(git.checkout).to.have.been.calledWith("topic");
 
           });
 
@@ -874,14 +886,19 @@ describe("gerrit", function() {
 
   describe("topic()", function() {
 
-    it("should create a topic branch and set it's upstream", sinon.test(function() {
+    sandboxEach(function(sandbox) {
+      sandbox.stub(git, "checkout", _.noop);
+      sandbox.stub(git.branch, "create", _.noop);
+      sandbox.stub(git.branch, "setUpstream", _.noop);
+    });
 
-      this.stub(git.branch, "create").returns("q");
-      this.stub(git.branch, "setUpstream").returns("q");
+    it("should create a topic branch and set its upstream", sinon.test(function() {
 
       gerrit.topic("topic", "upstream");
 
-      expect(git.branch.create).to.have.been.calledWith("topic", "HEAD", true);
+      expect(git.branch.create).to.have.been.calledWith("topic", "HEAD");
+
+      expect(git.checkout).to.have.been.calledWith("topic");
 
       expect(git.branch.setUpstream).to.have.been.calledWith("HEAD", "upstream");
 
@@ -889,14 +906,13 @@ describe("gerrit", function() {
 
     it("should use the current upstream if none given", sinon.test(function() {
 
-      this.stub(git.branch, "create").returns("q");
-      this.stub(git.branch, "setUpstream").returns("q");
-
       this.stub(git.branch, "upstream").returns("upstream");
 
       gerrit.topic("topic");
 
-      expect(git.branch.create).to.have.been.calledWith("topic", "HEAD", true);
+      expect(git.branch.create).to.have.been.calledWith("topic", "HEAD");
+
+      expect(git.checkout).to.have.been.calledWith("topic");
 
       expect(git.branch.setUpstream).to.have.been.calledWith("HEAD", "upstream");
 

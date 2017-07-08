@@ -613,7 +613,7 @@ describe("git", function() {
 
         git.branch.create("branch", "start");
 
-        expect(git.exec).to.have.been.calledWith("branch", "branch", "start");
+        expect(git.exec).to.have.been.calledWith("branch", [], "branch", "start");
 
       }));
 
@@ -623,17 +623,17 @@ describe("git", function() {
 
         git.branch.create("branch");
 
-        expect(git.exec).to.have.been.calledWith("branch", "branch", "HEAD");
+        expect(git.exec).to.have.been.calledWith("branch", [], "branch", "HEAD");
 
       }));
 
-      it("should create and checkout the new branch if the parameter is set", sinon.test(function() {
+      it("should force create the branch if the paramter is set", sinon.test(function() {
 
         this.stub(git, "exec", _.noop);
 
         git.branch.create("branch", "start", true);
 
-        expect(git.exec).to.have.been.calledWith("checkout", "-b", "branch", "start");
+        expect(git.exec).to.have.been.calledWith("branch", ["--force"], "branch", "start");
 
       }));
 

@@ -1444,18 +1444,20 @@ describe("cli", function() {
 
       var options = {remote: "remote", branch: "branch"};
 
+      var expectedOptions = _.extend({}, options, {all: true});
+
       return cli.ninja(options)
         .then(function() {
 
           expect(gerrit.up).to.have.been.calledWith("remote", "branch", false);
 
-          expect(cli.submit).to.have.been.calledWith(null, options);
+          expect(cli.submit).to.have.been.calledWith(null, expectedOptions);
 
         });
 
     }));
 
-    it("should confirm with user if multiple patched detected", sinon.test(function() {
+    it("should confirm with user if multiple patches detected", sinon.test(function() {
 
       this.stub(git, "isDetachedHead").returns(false);
 
@@ -1473,6 +1475,8 @@ describe("cli", function() {
 
       var options = {remote: "remote", branch: "branch"};
 
+      var expectedOptions = _.extend({}, options, {all: true});
+
       return cli.ninja(options)
         .then(function() {
 
@@ -1480,7 +1484,7 @@ describe("cli", function() {
 
           expect(gerrit.up).to.have.been.calledWith("remote", "branch", false);
 
-          expect(cli.submit).to.have.been.calledWith(null, options);
+          expect(cli.submit).to.have.been.calledWith(null, expectedOptions);
 
         });
 
@@ -1512,16 +1516,17 @@ describe("cli", function() {
 
   describe("topic()", function() {
 
-    testRequirements(["inRepo"], cli.web);
+    testRequirements(["inRepo"], cli.topic);
 
     it("should create a topic branch", sinon.test(function() {
 
       this.stub(gerrit, "topic").returns("result");
 
+      this.stub(git.branch, "exists").returns(false);
 
-      cli.topic("name", "upstream");
+      cli.topic("name", "upstream", {force: false});
 
-      expect(gerrit.topic).to.have.been.calledWith("name", "upstream");
+      expect(gerrit.topic).to.have.been.calledWith("name", "upstream", false);
 
       expect(logSpy.info.output).to.equal("result");
 
@@ -1531,10 +1536,11 @@ describe("cli", function() {
 
       this.stub(gerrit, "topic").returns("result");
 
+      this.stub(git.branch, "exists").returns(false);
 
-      cli.topic("name");
+      cli.topic("name", null, {force: false});
 
-      expect(gerrit.topic).to.have.been.calledWith("name", "upstream");
+      expect(gerrit.topic).to.have.been.calledWith("name", "upstream", false);
 
       expect(logSpy.info.output).to.equal("result");
 
@@ -1544,7 +1550,9 @@ describe("cli", function() {
 
       git.branch.hasUpstream.returns(false);
 
-      expect(_.partial(cli.topic, "name")).to.throw(cli.CliError);
+      this.stub(git.branch, "exists").returns(false);
+
+      expect(_.partial(cli.topic, "name", null, {})).to.throw(cli.CliError);
 
     }));
 
@@ -1552,7 +1560,29 @@ describe("cli", function() {
 
       git.branch.isRemote.returns(false);
 
-      expect(_.partial(cli.topic, "name", "upstream")).to.throw(cli.CliError);
+      this.stub(git.branch, "exists").returns(false);
+
+      expect(_.partial(cli.topic, "name", "upstream", {})).to.throw(cli.CliError);
+
+    }));
+
+    it("should throw if the branch already exists", sinon.test(function() {
+
+      this.stub(git.branch, "exists").returns(true);
+
+      expect(_.partial(cli.topic, "name", "upstream", {force: false})).to.throw(cli.CliError);
+
+    }));
+
+    it("should force create the branch if flag is specifiec", sinon.test(function() {
+
+      this.stub(gerrit, "topic").returns("result");
+
+      this.stub(git.branch, "exists").returns(true);
+
+      cli.topic("name", "upstream", {force: true});
+
+      expect(gerrit.topic).to.have.been.calledWith("name", "upstream", true);
 
     }));
 
