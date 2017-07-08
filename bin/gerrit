@@ -258,7 +258,7 @@ program.command("review [verified_score] [code_review_score] [message]")
     var args = program.rawArgs.slice(program.rawArgs.indexOf("review") + 1);
 
     options.options.forEach(function(opt) {
-      if (_.contains(["-2", "-1"], opt.long)) {
+      if (_.includes(["-2", "-1"], opt.long)) {
         return;
       }
       var flagIndex = args.indexOf(opt.short);
