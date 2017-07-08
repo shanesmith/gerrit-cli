@@ -3,8 +3,10 @@
 > Gerrit in your command lines.
 
 gerrit-cli provides a command-line interface to the Gerrit code review system.
+With it you can clone projects, push and checkout patches, assign reviewers,
+and perform reviews all from the comfort of your shell.
 
-It was born out of the annoyance of having to write out `git push orign
+It was born out of the annoyance of having to write out `git push origin
 HEAD:refs/for/branch/topic` every time I wanted to push a patch. It's now just
 `gerrit up`.
 
@@ -13,22 +15,26 @@ HEAD:refs/for/branch/topic` every time I wanted to push a patch. It's now just
 
 Install using NPM.
 
-```
+```sh
 $ npm install -g gerrit-cli
 ```
 
 
-### Tab completion
+**Tab completion**
 
 Bash tab-completion is also available and can be enabled by adding the following
-line to your ~/.bashrc file.
+line to your `.bashrc` file.
 
-```
+```sh
 source <(gerrit completion)
 ```
+_Zsh completion is not yet available..._
 
+**Requirements**
 
-## Requirements
+- NodeJS >= 0.12
+- Git
+- SSH
 
 Tested with Gerrit 2.12.3, although most likely also works on older versions.
 
@@ -38,8 +44,7 @@ Tested with Gerrit 2.12.3, although most likely also works on older versions.
 gerrit-cli is composed of multiple sub-commands, much like git.
 
 Run `gerrit help` for a list of the commands, and `gerrit help <command>` for
-detailed help.
-
+detailed help. Many commands also have shorter aliases listed in the help page.
 
 ### Commands
 
@@ -71,107 +76,129 @@ squad           Manage squads of reviewers.
 ```
 
 
-### Config Setup
+### Feature Walkthrough
 
-First step, you'll need to tell gerrit-cli about your server. This is
-needed for certain commands like 'clone' and 'projects'. Run `gerrit config`
-and you'll be prompted for the information it needs.
+First we need to tell gerrit-cli about our server.
 
-Multiple configs can be created by passing in a name, for example `gerrit
-config mothership`, and later specified as options to other commands.  The
-default config which you've created earlier is appropriately named "default".
+```sh
+$ gerrit config
 
-Protip: the configs are saved in your `~/.gitconfig`.
-
-
-### Cloning
-
-Now you're ready to clone a remote repository. Run `gerrit clone` and you'll be
-presented with a selectable list of available projects. Pick a project and it
-will be cloned as usual. As a bonus the commit-msg hook will be automatically
-installed for you.
-
-
-### Creating a new topic and patch
-
-For gerrit-cli to keep track of things, a topic branch's upstream should be the
-target remote branch. For example, if you were to normally push `origin
-HEAD:refs/for/someBranch/myTopic` then your topic branch should be called
-`myTopic` and its upstream should be `origin/someBranch`.
-
-Of course gerrit-cli helps you out here, you can create topic branches with
-`gerrit topic myTopic`. The new branch's upstream will be set to the current
-branch's upstream. For example, if you were on `master` which tracks
-`origin/master`, then `myTopic`'s upstream would be `origin/master`.
-
-Now that you have your topic branch get hacking and create your commits as
-usual. When you're done and ready to push to Gerrit for review, run `gerrit
-up`. That's it.
-
-You could also assign reviewers to the patch by using the
-'assign' option like so: `gerrit up --assign cbush jmartin`.
-
-Lastly, you may also group reviewers into "squads" if you find you're assigning
-the same people often. Run `gerrit squad create the_usual_suspects cbush jmartin`
-to create one, and prefix the squad name with an @-symbol to use it in your
-assign list like so: `gerrit assign @the_usual_suspects`.
-
-
-### Viewing patches on Gerrit
-
-Run `gerrit patches` to view the list of open patches on Gerrit. There are
-plenty of flags to filter the patches and define the display, I suggest taking
-a look at `gerrit help patches`.
-
-Here are a few examples.
-
+# Creating new configuration for "default"
+# ? Host (ex: example.com) sprockets.com
+# ? Port 29418
+# ? User george
 ```
-// Patches that you've pushed.
-$ gerrit patches --mine
 
-// Patches that have yet to be reviewed for which you've been assigned as reviewer.
+Now let's clone a project. Note how the commit-msg hook is automatically
+installed at the end.
+
+```sh
+$ gerrit clone killer-app
+
+# ? Clone to which folder? killer-app
+# Cloning project killer-app from default config into folder killer-app...
+# ...
+# Installing commit-msg hook...
+```
+
+Now we want to start working on a topic branch. 
+
+gerrit-cli has one requirement in order to track your work: your local topic
+branch needs to track the upstream branch that it is intended to merge
+into.
+
+We'll use the `topic` command here, which will simply create a branch that will
+track the current branch's upstream.
+
+```sh
+$ gerrit topic lasers
+
+# Branch lasers set up to track remote branch master from origin.
+```
+
+`gerrit-cli` commands act on the current topic branch, which is now "lasers".
+
+It's time to crank out some code.
+
+```sh
+$ vim shark.js
+
+# Hack, hack, hack...
+
+$ git commit -m "Added fricken lasers"
+```
+
+Let's create a patch for review on the server for this commit.
+
+```sh
+$ gerrit up
+
+# Pushing to origin (refs/for/master/lasers)
+# remote:
+# remote: New Changes:
+# remote:   https://sprockets.com/gerrit/57420 Added fricken lasers
+# remote:
+# To ssh://sprockets.com:29418/killer-app.git
+#  * [new branch]      HEAD -> refs/for/master/lasers
+```
+
+Now we'll want to add some reviewers. Let's say that we know we'll often be
+assigning the same set of reviewers, we can create a squad to group them.
+
+```sh
+$ gerrit squad set dudes jmartin cbush
+
+# Reviewer(s) "jmartin, cbush" set to squad "dudes".
+
+$ gerrit assign @dudes slevasseur
+
+# Assigned reviewer jmartin
+# Assigned reviewer cbush
+# Assigned reviewer slevasseur
+```
+
+Let's finish up by reviewing someone else's patch. We can view what patches are
+on the server with the `patches` command, we'll add some filter flags for our
+use right now.
+
+```sh
 $ gerrit patches --not-reviewed --assigned
 
-// Patches with featureX as the target branch, displayed in a vertical table format.
-$ gerrit patches --branch featureX --vertical
-
-// Patches that you've starred, displaying only the patch number, topic and subject.
-$ gerrit patches --starred --format '%n %t %s'
+# Number  Topic   Branch  Owner    Updated 
+# ------  ------  ------  -----    --------
+# 123456  fixBug  master  cbush    Mar 14th
+# 713705  soleil  master  jmartin  Sep 3rd
 ```
 
-### Checking out and reviewing patches
+We'll check out the first patch.
 
-Let's say you run `gerrit patches` and get the following result.
+```sh
+$ gerrit checkout fixBug
 
+# Getting latest patchset...
+# Refspec is refs/changes/56/123456/1
 ```
-Number  Topic   Branch  Owner  Updated   [...]
-------  ------  ------  -----  --------  -----
-12345   fixBug  master  cbush  Jun 13th  [...]
+
+Now that we have the topic branch checked out we can run our tests on it, then
+leave our review.
+
+```sh
+$ gerrit review 1 -1 "Bug is fixed, but needs more cow bells."
+
+# Reviews have been posted successfully.
 ```
 
-You can check out the patch using either the patch number `gerrit checkout
-12345` or topic `gerrit checkout fixBug`. This command will fetch the latest
-patch-set from the remote repository and properly name the local branch and
-set the upstream.
+If we want to leave an inline review comment that can't be done through this
+tool, however you can quickly navigate to the web interface.
 
-Once you're done reviewing the code and testing the patch we can choose do run
-one of the following commands from these examples:
+```sh
+$ gerrit web
+```
 
-- `gerrit review +1 -2 "Works well but needs code cleanup"`
+This concludes the walkthrough! If your legs are tired why don't you sit down
+and read through `gerrit help` for more options and advanced use.
 
-- `gerrit submit "Merged with gusto."`
-
-- `gerrit comment "Have you tested this on Android Sony Ericsson Devour Epic Z Prime?"`
-
-- `gerrit abandon "Change of requirements."`
-
-Unfortunately one of the only thing you can't do with gerrit-cli is leave inline
-comments, you need to use Gerrit's web interface for that. This is however made
-easier thanks to the `gerrit web` command which opens the web interface in your
-default browser to the patch we currently have checked out.
 
 # License
 
-Copyright (c) 2016 Shane Smith
-
-Licensed under the MIT license
+Copyright (c) Shane Smith. Distributed under the MIT license.
