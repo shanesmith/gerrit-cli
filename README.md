@@ -1,3 +1,7 @@
+[![npm](https://img.shields.io/npm/v/gerrit-cli.svg)](https://www.npmjs.com/package/gerrit-cli)
+[![license](https://img.shields.io/github/license/shanesmith/gerrit-cli.svg)](https://github.com/shanesmith/gerrit-cli)
+[![Build Status](https://travis-ci.org/shanesmith/gerrit-cli.svg?branch=master)](https://travis-ci.org/shanesmith/gerrit-cli)
+
 # gerrit-cli
 
 > Gerrit in your command lines.
