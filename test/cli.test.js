@@ -263,7 +263,7 @@ describe("cli", function() {
         port: 1234
       });
 
-      this.spy(gerrit, "config");
+      this.stub(gerrit, "config");
 
       return cli.config("newconf", {})
         .then(function() {
@@ -575,7 +575,7 @@ describe("cli", function() {
               break;
 
             case "s":
-              var genString = function(len) { return Array(len).fill("Q").join(""); };
+              var genString = function(len) { return _.fill(Array(len), "Q").join(""); };
               expect(defFunction({subject: genString(90)}, {table: true})).to.be.equal(genString(80) + "...");
               break;
 
@@ -907,6 +907,8 @@ describe("cli", function() {
 
       this.stub(git, "config").returns([]);
 
+      this.stub(git.config, "add");
+
       this.stub(git, "isDetachedHead").returns(false);
 
       this.stub(git, "revList").returns(revList);
@@ -1009,6 +1011,8 @@ describe("cli", function() {
     sandboxEach(function(sandbox) {
 
       sandbox.stub(gerrit, "up").resolves(null);
+
+      sandbox.stub(git, "isDetachedHead").returns(false);
 
       sandbox.stub(git, "revList").returns(["a"]);
 
@@ -1436,6 +1440,8 @@ describe("cli", function() {
 
       this.stub(gerrit, "parseRemote").resolves({foo: "bar"});
 
+      this.stub(git, "getChangeId").returns("abc123");
+
       this.stub(gerrit_ssh, "query").resolves([]);
 
       this.stub(gerrit, "up").resolves(null);
@@ -1464,6 +1470,8 @@ describe("cli", function() {
       this.stub(git, "revList").returns(["A", "B", "C"]);
 
       this.stub(gerrit, "parseRemote").resolves({foo: "bar"});
+
+      this.stub(git, "getChangeId").returns("abc123");
 
       this.stub(gerrit_ssh, "query").resolves([]);
 
@@ -1614,10 +1622,10 @@ describe("cli", function() {
 
     it("should remove merged topics", sinon.test(function() {
 
-      cli.clean({})
+      return cli.clean({})
         .then(function() {
 
-          expect(git.show).to.have.been.calledWith("branch", "-D", "--", "AA", "BB");
+          expect(git.show).to.have.been.calledWith(["branch", "-D", "--", "AA", "BB"]);
 
         });
 
@@ -1660,7 +1668,7 @@ describe("cli", function() {
 
       it("should set the squad to the provided reviewers", sinon.test(function() {
 
-        this.stub(gerrit.squad, "set", _.noop);
+        this.stub(gerrit.squad, "set");
 
         cli.squad.set("name", ["A", "B"]);
 
@@ -1676,7 +1684,7 @@ describe("cli", function() {
 
       it("should add the provided reviewers to the squad", sinon.test(function() {
 
-        this.stub(gerrit.squad, "add", _.noop);
+        this.stub(gerrit.squad, "add");
 
         cli.squad.add("name", ["A", "B"]);
 
@@ -1721,7 +1729,7 @@ describe("cli", function() {
 
       it("should delete the named squad", sinon.test(function() {
 
-        this.stub(gerrit.squad, "delete", _.noop);
+        this.stub(gerrit.squad, "delete");
 
         cli.squad.delete("name");
 
@@ -1737,7 +1745,7 @@ describe("cli", function() {
 
       it("should rename the squad", sinon.test(function() {
 
-        this.stub(gerrit.squad, "rename", _.noop);
+        this.stub(gerrit.squad, "rename");
 
         cli.squad.rename("name", "newname");
 

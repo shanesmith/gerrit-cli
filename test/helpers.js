@@ -1,5 +1,6 @@
 "use strict";
 
+var spawn = require("cross-spawn");
 var Q = require("bluebird");
 var fs = require("fs");
 var path = require("path");
@@ -7,19 +8,28 @@ var chai = require("chai");
 var sinon = require("sinon");
 var sinonChai = require("sinon-chai");
 var chaiAsPromised = require("chai-as-promised");
+var sinonAsPromised = require("sinon-as-promised");
+var chalk = require("chalk");
 
 var logger = require("../lib/logger");
 
-require("colors/safe").enabled = false; // cli-table dependency
-require("chalk").enabled = false;
+chalk.enabled = false;
 
-require("sinon-as-promised")(Q);
+sinonAsPromised(Q);
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
 global.sinon = sinon;
 global.expect = chai.expect;
+
+spawn.spawn = function(command, args) {
+  throw new Error("OH NOES SPAWN.SPAWN: " + command + " " + JSON.stringify(args));
+};
+
+spawn.sync = function(command, args) {
+  throw new Error("OH NOES SPAWN.SYNC: " + command + " " + JSON.stringify(args));
+};
 
 chai.use(function(_chai, utils) {
 
@@ -96,7 +106,7 @@ helpers.setupLogSpy = function() {
         if (logSpy[level].output !== "") {
           logSpy[level].output += "\n";
         }
-        logSpy[level].output += line;
+        logSpy[level].output += helpers.stripColors(line);
       });
 
       logger.on(level, spy);
@@ -139,6 +149,11 @@ helpers.sandboxEach = function(fn) {
     sandbox.restore();
   });
 
+};
+
+// https://github.com/Marak/colors.js/blob/master/lib/colors.js
+helpers.stripColors = function(str) {
+  return ("" + str).replace(/\x1B\[\d+m/g, "");
 };
 
 module.exports = helpers;

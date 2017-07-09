@@ -4,7 +4,7 @@ var helpers = require("./helpers");
 var sandboxEach = helpers.sandboxEach;
 
 var util = require("util");
-var child_process = require("child_process");
+var cross_spawn = require("cross-spawn");
 var mock_spawn = require("mock-spawn");
 
 var gerrit_ssh = require("../lib/gerrit-ssh");
@@ -23,7 +23,7 @@ describe("gerrit_ssh", function() {
   sandboxEach(function(sandbox) {
     spawn = mock_spawn();
     spawn.setDefault(spawn.simple(0, "out\n"));
-    sandbox.stub(child_process, "spawn", spawn);
+    sandbox.stub(cross_spawn, "spawn", spawn);
   });
 
   describe("run()", function() {
