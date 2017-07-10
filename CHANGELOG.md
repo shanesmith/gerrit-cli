@@ -1,3 +1,24 @@
+# 1.0.0
+
+- Minimum Node version is now 0.12
+- Fix command quoting issues on Windows
+- New `clean` command to remove merged topic branches
+- Improved Bash completion
+- Fix reviewer assignment failing on occasion
+- Increased speed of `gerrit completion`
+- Added log level options `--debug`, `--verbose`, `--loglevel <level>`
+- Added unit tests
+- New alias `tp` for `topic`
+- New commands `add-remote` and `install-hook` to set up existing repository
+- New option `--no-hook` for `clone` command
+- Improve `recheckout` command reliability
+- Better handling of drafts
+- Autocomplete prompter for `clone` command
+- Tweaked default output format of `patches` command
+- Fix querying by change number
+- Exit with non-zero code on error
+
+
 # 0.1.1
 
 - Various minor fixes
